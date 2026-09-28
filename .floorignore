@@ -1,0 +1,6 @@
+# commit-gate skips these: this repo's own hook code and tests contain the patterns it looks for,
+# and vendored skills ship example scripts.
+hooks/
+tests/
+scripts/
+skills/

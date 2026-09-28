@@ -1,0 +1,3 @@
+.upstream/
+.vendor-staging/
+node_modules/
