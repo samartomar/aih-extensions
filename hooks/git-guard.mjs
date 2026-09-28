@@ -15,7 +15,8 @@ const out = (decision, reason) => {
 };
 
 let input;
-try { input = JSON.parse(fs.readFileSync(0, 'utf8')); } catch {
+// Cursor on Windows pipes the payload through Windows PowerShell, which prefixes a BOM.
+try { input = JSON.parse(fs.readFileSync(0, 'utf8').replace(/^﻿/, '')); } catch {
   out('deny', 'could not read its hook input, so it cannot check this command. Fix or disable the hook.');
 }
 const raw = input?.tool_input?.command ?? input?.command ?? '';

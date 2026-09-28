@@ -144,3 +144,10 @@ test('a command given as an argv array is rejoined and still unwrapped', () => {
 test('a top-level command field (Cursor beforeShellExecution shape) is read too', () => {
   assert.equal(run({ command: 'git clean -fdx', cwd: '.' }).permissionDecision, 'deny');
 });
+test('a payload with a UTF-8 BOM (Cursor through Windows PowerShell) is read, not refused', () => {
+  const payload = '﻿' + JSON.stringify({ hook_event_name: 'preToolUse', tool_name: 'Shell', tool_input: { command: 'git reset --hard' } });
+  const r = spawnSync('node', [HOOK], { input: payload, encoding: 'utf8' });
+  assert.match(JSON.parse(r.stdout).hookSpecificOutput.permissionDecisionReason, /throws away uncommitted work/);
+  const ok = spawnSync('node', [HOOK], { input: '﻿' + JSON.stringify({ tool_name: 'Shell', tool_input: { command: 'git branch x' } }), encoding: 'utf8' });
+  assert.equal(ok.stdout.trim(), '');
+});

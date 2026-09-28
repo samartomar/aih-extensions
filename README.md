@@ -158,7 +158,7 @@ Verified: after install and uninstall, `settings.json`, `~/.codex/hooks.json`, `
 
 **The Problem**: Both upstream repos carry skills to other agents and stop there: their hooks, commands and personas stay Claude-only. Each tool reads a different skills folder, several read each other's, and each has its own hook protocol. Kimi and Codex ignore an "ask" decision, Codex calls its shell tool `Bash` while running PowerShell, and opencode blocks by throwing an error.
 
-**The Fix** is one policy (`hooks/lib/git-policy.mjs`) behind thin adapters, one skill copy per tool, and a live check in each CLI: the guard stopped `git reset --hard` with uncommitted work in Claude Code, Codex, Kimi Code and opencode. Where a tool can't pause to ask, a push is refused with a note to ask you, never let through.
+**The Fix** is one policy (`hooks/lib/git-policy.mjs`) behind thin adapters, one skill copy per tool, and a live check in each CLI: the guard stopped `git reset --hard` with uncommitted work in Claude Code, Cursor, Codex, Kimi Code and opencode. Where a tool can't pause to ask, a push is refused with a note to ask you, never let through.
 
 ### Summary
 
@@ -234,7 +234,7 @@ Addy's specialist reviewers, run in parallel by `/ship`:
 | **skill-guard** | Claude Code hook, Skill | Keeps `code-review` and `grilling` out of sub-agents, where they can't start sub-agents or interview you. |
 | **lanes-card** | Session start in Claude Code and Codex; opencode's system prompt | A short routing note, including the workaround for a gap in Matt's flow: `/implement` asks for review before committing, but `code-review` reads committed changes. |
 
-All four are Node with no dependencies. `npm test` runs 123 cases: 88 git-guard inputs covering every bypass found in review and each tool's input shape, 14 commit-gate cases against real git repos, and 21 for the other hooks, the opencode plugin and the installer.
+All four are Node with no dependencies. `npm test` runs 124 cases: 89 git-guard inputs covering every bypass found in review and each tool's input shape, 14 commit-gate cases against real git repos, and 21 for the other hooks, the opencode plugin and the installer.
 
 ---
 
@@ -281,9 +281,9 @@ Two runs per arm is a small sample: one run moves a score by 0.5. That is why sp
 | Codex | 0.155.1 | yes | refused | 13 auto skills from `~/.codex/skills`, each once | yes; `$ask-sam` works |
 | Kimi Code | 2.0.2, K3 | yes | refused | each once | hidden; `/skill:` can't be run headless |
 | opencode | 1.18.26, DeepSeek Flash | yes | refused | 44 from `~/.claude/skills`, each once | yes; `/ask-sam` works |
-| Cursor | 3.22.7 | not run: no Cursor CLI here | | loads `~/.claude` | |
+| Cursor | CLI 2026.09.26, Auto (`agent -p` from PowerShell) | yes | asked (auto-approved under `--force`) | from `~/.claude`, each once | yes |
 
-Cursor was checked against its own code instead: it turns Claude's `Bash|PowerShell` matcher into `Shell|PowerShell` and honours the same deny, and the guard passes its exact input in `npm test`.
+Cursor runs Claude's hooks through Windows PowerShell, which prefixes the payload with a byte-order mark; the guard strips it (found by this test, which first failed closed on every command).
 
 ---
 
@@ -312,6 +312,7 @@ Addy's skills are **vendored, not forked by hand**. `npm run vendor` fetches bot
 - **The commit gate is regex-shallow on purpose**, and people can skip it with `--no-verify` (Claude can't).
 - **Not every tool gets everything.** skill-guard is Claude-only (no other tool has a Skill tool call to hook), Kimi gets no lanes card (its session-start hook can't add context), and `/ship` and `/webperf` exist in Claude Code, Cursor and opencode only.
 - **Cursor is covered through its Claude import.** Turn off "Include Third-Party Plugins, Skills, and Other Configs" and Cursor loses the skills and the guard. `npm run status` reports the setting.
+- **Start Cursor's CLI from PowerShell, cmd or Windows Terminal, not Git Bash.** Launched from Git Bash, Cursor's CLI (2026.09.26) runs every hook's PowerShell wrapper through bash, the hook fails, and Cursor refuses every shell command. That hits any command hook, not just this one.
 - **Codex hooks need one trust click**, and until then Codex skips them without a word.
 - **opencode reads the skills from `~/.claude/skills`**, so `OPENCODE_DISABLE_CLAUDE_CODE_SKILLS` hides them (`status` warns).
 
