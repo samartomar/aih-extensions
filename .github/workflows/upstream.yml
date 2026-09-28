@@ -1,0 +1,87 @@
+name: Upstream check
+
+# Every 3 days: are Matt's or Addy's repos ahead of the pins in
+# scripts/upstream.config.mjs? If so, move the pins, re-vendor and run the tests.
+# A clean result goes to the upstream-update branch; either way the repo owner
+# gets an issue. Nothing is merged here: exact patches catch changed wording,
+# not changed meaning, so a person reads the upstream commits first.
+on:
+  schedule:
+    - cron: '23 7 */3 * *' # 07:23 UTC on days 1, 4, 7, ... of each month
+  workflow_dispatch:
+
+permissions:
+  contents: write
+  issues: write
+
+concurrency:
+  group: upstream-check
+
+defaults:
+  run:
+    shell: bash
+
+jobs:
+  check:
+    runs-on: windows-latest # where the hooks and tests are verified
+    steps:
+      - uses: actions/checkout@v7
+      - uses: actions/setup-node@v7
+        with:
+          node-version: 22
+
+      - name: Check the upstreams; if they moved, move the pins, re-vendor and test
+        id: check
+        run: node scripts/check-upstream.mjs --apply --out "$RUNNER_TEMP/upstream"
+        env:
+          GITHUB_TOKEN: ${{ github.token }}
+
+      - name: Find an open upstream-update issue
+        id: issue
+        if: steps.check.outputs.status != 'current'
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.check.outputs.title }}
+        run: |
+          gh label create upstream-update --color 0e8a16 --description "Matt's or Addy's skills moved past the pins" --force
+          open=$(gh issue list --label upstream-update --state open --json number,title --jq '.[] | "\(.number)\t\(.title)"')
+          echo "number=$(printf '%s\n' "$open" | head -n 1 | cut -f 1)" >> "$GITHUB_OUTPUT"
+          echo "same=$(printf '%s\n' "$open" | awk -F '\t' -v t="$TITLE" '$2 == t { print $1; exit }')" >> "$GITHUB_OUTPUT"
+
+      - name: Push the new pins to the upstream-update branch
+        if: steps.check.outputs.status == 'ready' && steps.issue.outputs.same == ''
+        env:
+          TITLE: ${{ steps.check.outputs.title }}
+        run: |
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898283+github-actions[bot]@users.noreply.github.com'
+          git switch -c upstream-update
+          git add -A
+          git commit -q -m "$TITLE"
+          git push --force origin upstream-update
+
+      - name: Open or update the issue, assigned to the repo owner
+        if: steps.check.outputs.status != 'current' && steps.issue.outputs.same == ''
+        env:
+          GH_TOKEN: ${{ github.token }}
+          TITLE: ${{ steps.check.outputs.title }}
+          BODY: ${{ steps.check.outputs.body }}
+          NUMBER: ${{ steps.issue.outputs.number }}
+          OWNER: ${{ github.repository_owner }}
+        run: |
+          if [ -n "$NUMBER" ]; then
+            gh issue edit "$NUMBER" --title "$TITLE" --body-file "$BODY" --add-assignee "$OWNER"
+            gh issue comment "$NUMBER" --body "Upstream moved again; the description above is now current."
+          else
+            gh issue create --title "$TITLE" --body-file "$BODY" --assignee "$OWNER" --label upstream-update
+          fi
+
+      - name: Close open upstream-update issues once the pins match upstream
+        if: steps.check.outputs.status == 'current'
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh label create upstream-update --color 0e8a16 --description "Matt's or Addy's skills moved past the pins" --force
+          for n in $(gh issue list --label upstream-update --state open --json number --jq '.[].number'); do
+            gh issue close "$n" --comment "The pins in scripts/upstream.config.mjs match both upstreams again."
+          done

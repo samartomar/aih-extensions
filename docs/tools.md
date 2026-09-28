@@ -51,7 +51,7 @@ After install and uninstall, `settings.json`, `~/.codex/hooks.json`, `~/.kimi-co
 
 - Codex runs new or changed hooks only after you trust them in its interactive app (at startup, or with `/hooks`). Until then it skips them without a word, so the guard is off.
 - It calls its shell tool `Bash` but runs PowerShell on Windows, so the guard reads each command both ways (`--any-shell`).
-- It rejects an "ask" decision, so the guard refuses a push instead (`--no-ask`) and tells the model to ask you.
+- It rejects an "ask" decision, so the guard refuses a push to `main`, `master` or the default branch instead (`--no-ask`) and tells the model to ask you. Pushes to other branches go through.
 - Codex ignores `disable-model-invocation` and reads `agents/openai.yaml`, which the vendor script writes for every typed-only skill here and Matt ships for his.
 - Custom prompts are gone from Codex, so `/ship` and `/webperf` aren't installed there; the `shipping-and-launch` skill is.
 

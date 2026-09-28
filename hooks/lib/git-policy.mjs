@@ -1,11 +1,59 @@
 // Which git commands an agent may run on its own. Shared by every CLI's
 // adapter (hooks/git-guard.mjs for command hooks, hooks/opencode-plugin.mjs).
+import path from 'node:path';
 import { gitCommands, hasFlag } from './shell.mjs';
 
 const YOURSELF = 'Run it yourself in a terminal if you really mean it.';
 const everyPath = (args) => args.some((a) => a === '.' || a === ':/' || a === '*' || a === ':(top)');
+const PROTECTED = ['main', 'master'];
+const PUSH_VALUE_OPTS = new Set(['--repo', '-o', '--push-option', '--receive-pack', '--exec']);
 
-function verdict({ sub, args, config }) {
+// `git push [options] [<remote> [<refspec>...]]`, split into its parts.
+export function pushParts(args) {
+  const pos = [];
+  let remote, all = false, tags = false;
+  for (let i = 0; i < args.length; i++) {
+    const a = args[i];
+    if (a === '--') { pos.push(...args.slice(i + 1)); break; }
+    if (a.startsWith('--repo=')) { remote = a.slice(7); continue; }
+    if (PUSH_VALUE_OPTS.has(a)) { if (a === '--repo') remote = args[i + 1]; i++; continue; }
+    if (a === '--all' || a === '--branches') all = true;
+    if (a === '--tags' || a === '--follow-tags') tags = true;
+    if (!a.startsWith('-')) pos.push(a);
+  }
+  if (remote === undefined) remote = pos.shift();
+  return { remote, refspecs: pos, all, tags };
+}
+
+// A push asks only when it lands on main, master or the remote's default
+// branch, or when the target can't be worked out. `repo` answers questions
+// about the repo (hooks/lib/git-context.mjs); without it every push asks.
+function pushVerdict(args, shown, dir, repo) {
+  if (!repo) return ['ask', `${shown} publishes commits to a remote.`];
+  const { remote: named, refspecs, all, tags } = pushParts(args);
+  if (all) return ['ask', `${shown} publishes every branch.`];
+  if (tags) return ['ask', `${shown} publishes tags.`];
+  const current = repo.currentBranch(dir);
+  const targets = (refspecs.length ? refspecs : ['HEAD']).map((spec) => {
+    let dst = spec.slice(spec.lastIndexOf(':') + 1);
+    if (dst === 'HEAD') return current ? { branch: current } : null;
+    if (dst.startsWith('refs/tags/') || (!spec.includes(':') && repo.isTag(dir, dst))) return { tag: dst.replace(/^refs\/tags\//, '') };
+    dst = dst.replace(/^refs\/heads\//, '');
+    return dst.startsWith('refs/') ? null : { branch: dst };
+  });
+  if (targets.includes(null)) return ['ask', `${shown} publishes commits, and which branch it updates can't be worked out here.`];
+  const tag = targets.find((t) => t.tag);
+  if (tag) return ['ask', `${shown} publishes the tag ${tag.tag}.`];
+  const hit = targets.find((t) => PROTECTED.includes(t.branch));
+  if (hit) return ['ask', `${shown} publishes commits to ${hit.branch}.`];
+  const remote = named ?? repo.pushRemote(dir, current);
+  const def = repo.defaultBranch(dir, remote);
+  if (!def) return ['ask', `${shown} publishes commits, and the default branch of ${remote} can't be looked up.`];
+  const onDefault = targets.find((t) => t.branch === def);
+  return onDefault ? ['ask', `${shown} publishes commits to ${def}, the default branch of ${remote}.`] : null;
+}
+
+function verdict({ sub, args, config, cwd }, ctx) {
   const shown = `\`git ${sub} ${args.join(' ')}\``.replace(/ `$/, '`');
   if (config.some((kv) => /^core\.hookspath=/i.test(kv))) return ['deny', `${shown} overrides core.hooksPath, which skips the repo's commit hooks. ${YOURSELF}`];
   switch (sub) {
@@ -15,7 +63,7 @@ function verdict({ sub, args, config }) {
         || args.some((a) => a.startsWith('--force-with-lease') || a === '--force-if-includes' || /^[+:]/.test(a))) {
         return ['deny', `${shown} rewrites or deletes remote history. ${YOURSELF}`];
       }
-      return ['ask', `${shown} publishes commits to a remote.`];
+      return pushVerdict(args, shown, path.resolve(ctx.cwd ?? process.cwd(), ...cwd), ctx.repo);
     case 'commit':
       return hasFlag(args, '--no-verify', 'n') ? ['deny', `${shown} skips the repo's commit hooks, including the commit gate. Fix what the hook reports instead.`] : null;
     case 'reset':
@@ -44,14 +92,15 @@ function verdict({ sub, args, config }) {
 }
 
 // null (allow) or { decision: 'deny' | 'ask', reason }. A deny anywhere in the
-// command wins over an ask.
-export function checkCommand(command, { powershell = false } = {}) {
+// command wins over an ask. `cwd` and `repo` let a push to a feature branch
+// through; without them every push asks.
+export function checkCommand(command, { powershell = false, cwd, repo } = {}) {
   const text = String(command ?? '');
   // Fast path: no git and no base64-encoded PowerShell command anywhere.
   if (!/git/i.test(text) && !/\s-(e|ec|enc|encodedcommand)\s/i.test(text)) return null;
   let asked = null;
   for (const c of gitCommands(text, { powershell })) {
-    const v = verdict(c);
+    const v = verdict(c, { cwd, repo });
     if (v?.[0] === 'deny') return { decision: 'deny', reason: v[1] };
     if (v?.[0] === 'ask') asked ??= { decision: 'ask', reason: v[1] };
   }
@@ -60,10 +109,10 @@ export function checkCommand(command, { powershell = false } = {}) {
 
 // For a tool whose shell is not known for sure (Cursor's `Shell` on Windows
 // can be PowerShell or Git Bash), read the command both ways; the stricter wins.
-export function checkShell(command, { shells = ['bash'] } = {}) {
+export function checkShell(command, { shells = ['bash'], cwd, repo } = {}) {
   let result = null;
   for (const shell of shells) {
-    const v = checkCommand(command, { powershell: shell === 'powershell' });
+    const v = checkCommand(command, { powershell: shell === 'powershell', cwd, repo });
     if (v?.decision === 'deny') return v;
     result ??= v;
   }

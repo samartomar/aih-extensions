@@ -66,9 +66,18 @@ export function segments(command, { powershell = false } = {}) {
   const { text, code } = heredocs(command.replace(/\r\n/g, '\n'), powershell);
   const segs = [], subs = [...code];
   const esc = powershell ? '`' : '\\';
-  let words = [], word = '', inWord = false, quote = null;
-  const endWord = () => { if (inWord) words.push(word); word = ''; inWord = false; };
-  const endSegment = () => { endWord(); if (words.length) segs.push(words); words = []; };
+  let words = [], word = '', inWord = false, quote = null, quoted = false, target = false;
+  // Unquoted redirections (`2>&1`, `> out.txt`, `2>$null`, `*>&1`, `&>log`) are
+  // dropped with their target, so neither reads as a command or an argument.
+  const endWord = () => {
+    if (inWord) {
+      if (target) target = false;
+      else if (!quoted && /^([\d*]*(>>?|<)|&>>?)$/.test(word)) target = true;
+      else if (!(!quoted && /^([\d*]*(>>?|<)|&>>?)./.test(word))) words.push(word);
+    }
+    word = ''; inWord = false; quoted = false;
+  };
+  const endSegment = () => { endWord(); target = false; if (words.length) segs.push(words); words = []; };
   for (let i = 0; i < text.length; i++) {
     const c = text[i], next = text[i + 1];
     if (c === esc && next === '\n' && quote !== "'") { i++; continue; } // line continuation
@@ -93,8 +102,10 @@ export function segments(command, { powershell = false } = {}) {
       else word += c;
       continue;
     }
-    if (c === '"' || c === "'") { quote = c; inWord = true; continue; }
-    if (c === esc && i + 1 < text.length) { word += text[++i]; inWord = true; continue; }
+    if (c === '"' || c === "'") { quote = c; inWord = true; quoted = true; continue; }
+    if (c === esc && i + 1 < text.length) { word += text[++i]; inWord = true; quoted = true; continue; }
+    // `2>&1`, `>&2`, `&>file`: the & belongs to a redirection, not a separator.
+    if (c === '&' && ((inWord && /[<>]$/.test(word)) || next === '>')) { word += c; inWord = true; continue; }
     if (c === ';' || c === '\n' || c === '(' || c === ')' || c === '|' || c === '&') {
       if (c === '&' && !inWord && words.length === 0 && next !== '&') continue; // PowerShell call operator
       endSegment();

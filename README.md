@@ -72,7 +72,7 @@ The specialists draw on seven checklists in [`references/`](references/) (defini
 
 ### Safety layer (this repo)
 
-- **git-guard** checks each shell command before the agent runs it. It denies force pushes and remote deletes, `reset --hard`, `clean -f`, forced branch moves and deletes, `checkout`/`switch`/`restore` that discard work, `stash clear`, `commit --no-verify` and `-c core.hooksPath=…`, and asks before any other push. It is a guardrail against common agent mistakes, not a sandbox: see [Limits](#limits).
+- **git-guard** checks each shell command before the agent runs it. It denies force pushes and remote deletes, `reset --hard`, `clean -f`, forced branch moves and deletes, `checkout`/`switch`/`restore` that discard work, `stash clear`, `commit --no-verify` and `-c core.hooksPath=…`, and asks before a push to `main`, `master` or the remote's default branch (as GitHub reports it), or when it can't tell which branch a push updates. Pushes to other branches go through. It is a guardrail against common agent mistakes, not a sandbox: see [Limits](#limits).
 - **The commit gate** ([`/install-commit-gate`](skills/install-commit-gate/SKILL.md), once per repo) is a git `commit-msg` hook, so it covers commits from any tool or terminal. It blocks conflict markers and leftover `[DEBUG-…]` tags, and new suppressions, skipped tests or removed assertions unless the message says `[floor-ok: <reason>]`.
 - **skill-guard** keeps `/code-review` and `/grilling` out of sub-agents, where they can't start their own sub-agents or interview you.
 - **The routing note** at session start points to `/ask-matt` and [`/ask-sam`](skills/ask-sam/SKILL.md), the router for this add-on.
@@ -89,7 +89,7 @@ This README writes every skill as `/name`.
 
 Each tool gets its own copy of the skills, loads each skill once, and runs git-guard through its own hook system. Tools differ in what happens when the guard wants to ask, and when the guard itself can't run:
 
-| Tool | Skills from | Guard wired in as | A push (guard asks) | If the guard can't run |
+| Tool | Skills from | Guard wired in as | A push to `main` (guard asks) | If the guard can't run |
 |---|---|---|---|---|
 | Claude Code | `~/.claude/skills` | hook in `settings.json` | asks you | command runs, error shown |
 | Cursor | `~/.claude`, through "Include Third-Party Plugins, Skills, and Other Configs" (on by default) | Claude's hook, imported by Cursor | asks you | command refused |
@@ -113,7 +113,7 @@ Removes every file and config entry the install added, for every tool, and nothi
 - **The commit gate uses regular expressions on the staged diff**, and people can skip it with `git commit --no-verify` (git-guard stops agents from doing that).
 - **Coverage differs by tool.** skill-guard is Claude Code only, Kimi Code gets no session-start note, and `/ship` and `/webperf` exist in Claude Code, Cursor and opencode only.
 - **Start Cursor's CLI from PowerShell, cmd or Windows Terminal.** Started from Git Bash, it runs hooks through the wrong shell and refuses every shell command, whatever the hook.
-- **Updates are manual.** Run install again to move to newer pins.
+- **Updates are reviewed, not automatic.** Every 3 days a GitHub workflow checks both upstreams; when either moved, it re-vendors and tests on a branch and opens an issue for the maintainer ([docs/maintaining.md](docs/maintaining.md#updating-an-upstream-pin)). On your machine, run install again to move to newer pins.
 
 ## Claude Code plugin route
 

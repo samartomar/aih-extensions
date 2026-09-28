@@ -5,7 +5,7 @@
 import fs from 'node:fs';
 
 let input;
-try { input = JSON.parse(fs.readFileSync(0, 'utf8').replace(/^﻿/, '')); } catch { process.exit(0); }
+try { input = JSON.parse(fs.readFileSync(0, 'utf8').replace(/^\uFEFF/, '')); } catch { process.exit(0); }
 const full = String(input?.tool_input?.skill ?? '');
 const name = full.slice(full.lastIndexOf(':') + 1);
 

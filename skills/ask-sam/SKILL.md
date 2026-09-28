@@ -43,7 +43,7 @@ Most of these skills are typed, not automatic: an eval (with vs without the add-
 
 ## Guardrails (hooks, always on)
 
-- **git-guard**: blocks `push --force` and friends, `reset --hard`, `clean -f`, `branch -D/-f/-M/-C`, `checkout -f/-B/.`, `switch -f/-C/--discard-changes`, `restore .`, `stash clear`, `commit --no-verify` and `-c core.hooksPath`; asks before any other push. Reads Bash and PowerShell, including `bash -lc`, `pwsh -Command`, `eval`, `$(…)` and line continuations.
+- **git-guard**: blocks `push --force` and friends, `reset --hard`, `clean -f`, `branch -D/-f/-M/-C`, `checkout -f/-B/.`, `switch -f/-C/--discard-changes`, `restore .`, `stash clear`, `commit --no-verify` and `-c core.hooksPath`; asks before a push to `main`, `master` or the remote's default branch. Reads Bash and PowerShell, including `bash -lc`, `pwsh -Command`, `eval`, `$(…)` and line continuations.
 - **skill-guard**: keeps `code-review` and `grilling` out of sub-agents.
 - **lanes-card**: a short routing note at session start and after `/compact`.
 

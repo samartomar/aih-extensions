@@ -7,20 +7,21 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { checkShell, shellsFor } from './lib/git-policy.mjs';
+import { gitContext } from './lib/git-context.mjs';
 
 const LANES = fs.readFileSync(path.join(path.dirname(fileURLToPath(import.meta.url)), 'lanes.md'), 'utf8').trim();
 
-export function verdictFor(tool, args, platform = process.platform) {
+export function verdictFor(tool, args, { platform = process.platform, cwd = process.cwd(), repo = gitContext() } = {}) {
   if (tool !== 'bash') return null;
-  const v = checkShell(String(args?.command ?? ''), { shells: shellsFor('Shell', platform) });
+  const v = checkShell(String(args?.command ?? ''), { shells: shellsFor('Shell', platform), cwd: args?.workdir || cwd, repo });
   if (!v) return null;
   return `aih-extensions git-guard: ${v.reason}${v.decision === 'ask' ? ' opencode cannot pause to ask, so it is refused: ask the user to run it.' : ''}`;
 }
 
 export function createPlugin() {
-  return async () => ({
+  return async ({ directory } = {}) => ({
     'tool.execute.before': async (input, output) => {
-      const reason = verdictFor(input?.tool, output?.args);
+      const reason = verdictFor(input?.tool, output?.args, { cwd: directory || process.cwd() });
       if (reason) throw new Error(reason);
     },
     'experimental.chat.system.transform': async (_input, output) => {

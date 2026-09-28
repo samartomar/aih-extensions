@@ -1,9 +1,11 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
+import fs from 'node:fs';
 import os from 'node:os';
 import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { checkCommand } from '../hooks/lib/git-policy.mjs';
 
 const HOOK = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'git-guard.mjs');
 
@@ -145,9 +147,57 @@ test('a top-level command field (Cursor beforeShellExecution shape) is read too'
   assert.equal(run({ command: 'git clean -fdx', cwd: '.' }).permissionDecision, 'deny');
 });
 test('a payload with a UTF-8 BOM (Cursor through Windows PowerShell) is read, not refused', () => {
-  const payload = '﻿' + JSON.stringify({ hook_event_name: 'preToolUse', tool_name: 'Shell', tool_input: { command: 'git reset --hard' } });
+  const payload = '\uFEFF' + JSON.stringify({ hook_event_name: 'preToolUse', tool_name: 'Shell', tool_input: { command: 'git reset --hard' } });
   const r = spawnSync('node', [HOOK], { input: payload, encoding: 'utf8' });
   assert.match(JSON.parse(r.stdout).hookSpecificOutput.permissionDecisionReason, /throws away uncommitted work/);
-  const ok = spawnSync('node', [HOOK], { input: '﻿' + JSON.stringify({ tool_name: 'Shell', tool_input: { command: 'git branch x' } }), encoding: 'utf8' });
+  const ok = spawnSync('node', [HOOK], { input: '\uFEFF' + JSON.stringify({ tool_name: 'Shell', tool_input: { command: 'git branch x' } }), encoding: 'utf8' });
   assert.equal(ok.stdout.trim(), '');
+});
+
+// ---------- pushes: ask only for main, master or the remote's default branch ----------
+
+const fake = (over = {}) => ({ currentBranch: () => 'feat', pushRemote: () => 'origin', defaultBranch: () => 'main', isTag: () => false, ...over });
+const push = (cmd, repo = fake()) => checkCommand(cmd, { cwd: '/r', repo })?.decision ?? 'allow';
+
+test('pushes to a feature branch go through; main, master and the default branch ask', () => {
+  for (const cmd of ['git push origin feat', 'git push', 'git push -u origin HEAD', 'git push origin main:feat', 'git push origin feat 2>&1', 'git push --set-upstream origin feat']) assert.equal(push(cmd), 'allow', cmd);
+  for (const cmd of ['git push origin main', 'git push origin feat:main', 'git push origin HEAD:refs/heads/master', 'git push origin feat main']) assert.equal(push(cmd), 'ask', cmd);
+  assert.equal(push('git push', fake({ currentBranch: () => 'main' })), 'ask');
+  assert.match(checkCommand('git push origin develop', { cwd: '/r', repo: fake({ defaultBranch: () => 'develop' }) }).reason, /develop, the default branch of origin/);
+});
+test('a push asks whenever its target is unclear, and for tags or every branch', () => {
+  assert.equal(push('git push', fake({ currentBranch: () => null })), 'ask');
+  assert.equal(push('git push origin feat', fake({ defaultBranch: () => null })), 'ask');
+  assert.equal(push('git push origin v1.2', fake({ isTag: (_d, n) => n === 'v1.2' })), 'ask');
+  for (const cmd of ['git push --tags', 'git push --follow-tags origin feat', 'git push --all origin', 'git push origin refs/notes/x']) assert.equal(push(cmd), 'ask', cmd);
+  assert.equal(checkCommand('git push origin feat', {})?.decision, 'ask', 'without repo context every push asks');
+});
+test('redirections are not arguments, and a quoted ">" is not a redirection', () => {
+  assert.equal(checkCommand('git push origin main 2>&1', {}).reason, '`git push origin main` publishes commits to a remote.');
+  assert.equal(push('git push origin feat > out.txt'), 'allow');
+  assert.equal(push('git push origin feat 2>$null'), 'allow');
+  assert.equal(decide('2>/dev/null git push --force'), 'deny');
+  assert.equal(decide('git commit -m ">" --no-verify'), 'deny');
+  assert.equal(decide('git commit -m ">" --no-verify', 'PowerShell'), 'deny');
+});
+test('real repo: the remote\'s default branch is looked up (here trunk, not main)', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-gate-'));
+  try {
+    const g = (dir, ...a) => spawnSync('git', ['-C', dir, ...a], { encoding: 'utf8' });
+    const bare = path.join(root, 'remote.git'), work = path.join(root, 'work');
+    spawnSync('git', ['init', '-q', '--bare', '-b', 'trunk', bare]);
+    spawnSync('git', ['init', '-q', '-b', 'feat', work]);
+    g(work, '-c', 'user.name=t', '-c', 'user.email=t@t', 'commit', '-q', '--allow-empty', '-m', 'x');
+    g(work, 'remote', 'add', 'origin', bare);
+    g(work, 'push', '-q', 'origin', 'HEAD:trunk');
+    const guard = (command) => {
+      const r = spawnSync('node', [HOOK], { input: JSON.stringify({ tool_name: 'Bash', tool_input: { command }, cwd: work }), encoding: 'utf8' });
+      return r.stdout.trim() ? JSON.parse(r.stdout).hookSpecificOutput : null;
+    };
+    assert.equal(guard('git push origin feat'), null);
+    assert.equal(guard('git push -u origin HEAD'), null);
+    assert.match(guard('git push origin trunk').permissionDecisionReason, /trunk, the default branch of origin/);
+    assert.equal(guard('git push origin main').permissionDecision, 'ask');
+    assert.equal(guard(`git -C "${work.split(path.sep).join('/')}" push origin feat`), null);
+  } finally { fs.rmSync(root, { recursive: true, force: true }); }
 });
