@@ -6,6 +6,7 @@ import path from 'node:path';
 import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { checkCommand } from '../hooks/lib/git-policy.mjs';
+import { gitContext } from '../hooks/lib/git-context.mjs';
 
 const HOOK = path.join(path.dirname(fileURLToPath(import.meta.url)), '..', 'hooks', 'git-guard.mjs');
 
@@ -200,4 +201,94 @@ test('real repo: the remote\'s default branch is looked up (here trunk, not main
     assert.equal(guard('git push origin main').permissionDecision, 'ask');
     assert.equal(guard(`git -C "${work.split(path.sep).join('/')}" push origin feat`), null);
   } finally { fs.rmSync(root, { recursive: true, force: true }); }
+});
+
+test('temporary protected-push approval follows the actual URL and explicit branch only', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-gate-'));
+  try {
+    const work = path.join(root, 'work'), own = path.join(root, 'install');
+    const file = path.join(own, 'push-approvals.json');
+    const url = 'https://github.com/example/private-project.git';
+    fs.mkdirSync(own);
+    const g = (...args) => {
+      const r = spawnSync('git', ['-C', work, ...args], { encoding: 'utf8' });
+      assert.equal(r.status, 0, r.stderr);
+    };
+    const init = spawnSync('git', ['init', '-q', '-b', 'main', work], { encoding: 'utf8' });
+    assert.equal(init.status, 0, init.stderr);
+    g('remote', 'add', 'origin', url);
+    g('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
+    const decide = (command) => checkCommand(command, { cwd: work, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
+    assert.equal(decide('git push origin main'), 'ask', 'no approval is the default');
+    fs.writeFileSync(file, JSON.stringify({ version: 1, protectedPushes: [{ url, branches: ['main'] }] }));
+    for (const command of ['git push origin main', 'git push -u origin HEAD', 'git push origin HEAD:refs/heads/main']) {
+      assert.equal(decide(command), 'allow', command);
+    }
+    for (const command of ['git push', 'git push origin', 'git push origin master', 'git push origin main feature',
+      'git push --all origin', 'git push --tags origin', 'git push --follow-tags origin main', 'git push origin refs/notes/n',
+      'git push --fo origin main', 'git push --receive-pack=other origin main',
+      'git push origin refs/tags/release:refs/heads/main', 'git push origin refs/heads/*:refs/heads/*',
+      'git -c remote.origin.pushurl=https://github.com/example/other.git push origin main',
+      'git -cremote.origin.pushurl=https://github.com/example/other.git push origin main',
+      'git --config-env=remote.origin.pushurl=OTHER_URL push origin main',
+      'git --config-env remote.origin.pushurl=OTHER_URL push origin main',
+      'git --git-dir=other/.git push origin main', 'git --git-dir other/.git push origin main',
+      'git --work-tree=other push origin main', 'git --namespace=other push origin main',
+      'GIT_CONFIG_COUNT=1 git push origin main', 'env GIT_CONFIG_COUNT=1 git push origin main',
+      "env GIT_CONFIG_COUNT=1 bash -c 'git push origin main'"]) {
+      assert.equal(decide(command), 'ask', command);
+    }
+    for (const command of ['git push --force origin main', 'git push --force-with-lease origin main', 'git push origin +main',
+      'git push --delete origin main', 'git push --mirror origin', 'git push --prune origin main',
+      'git reset --hard', 'git clean -fdx', 'git commit --no-verify -m test']) {
+      assert.equal(decide(command), 'deny', command);
+    }
+    const hook = spawnSync('node', [HOOK, '--no-ask', '--any-shell'], {
+      input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: `git -C "${work.split(path.sep).join('/')}" push origin main` }, cwd: root }),
+      encoding: 'utf8', env: { ...process.env, AIH_EXTENSIONS_HOME: own },
+    });
+    assert.equal(hook.status, 0, hook.stderr);
+    assert.equal(hook.stdout.trim(), '', 'the installed hook protocol permits the approved push');
+    g('config', 'push.followTags', 'true');
+    assert.equal(decide('git push origin main'), 'ask', 'implicit tags are outside the approval');
+    g('config', '--unset', 'push.followTags');
+    g('config', 'remote.origin.mirror', 'true');
+    assert.equal(decide('git push origin main'), 'ask', 'configured mirroring is outside the approval');
+    g('config', '--unset', 'remote.origin.mirror');
+    g('remote', 'set-url', '--push', 'origin', 'https://github.com/example/other.git');
+    assert.equal(decide('git push origin main'), 'ask', 'fetch URL does not authorize a different push URL');
+    g('remote', 'set-url', '--add', '--push', 'origin', url);
+    assert.equal(decide('git push origin main'), 'ask', 'every push URL must be approved');
+    g('config', '--unset-all', 'remote.origin.pushurl');
+    g('config', 'url.https://github.com/example/other.git.pushInsteadOf', url);
+    assert.equal(decide('git push origin main'), 'ask', 'rewritten push URL must be approved');
+  } finally {
+    assert.equal(path.dirname(root), os.tmpdir());
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('invalid, missing, or revoked temporary approval restores protected-push checks', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-gate-'));
+  try {
+    const file = path.join(root, 'push-approvals.json');
+    const url = 'https://github.com/example/private-project.git';
+    const init = spawnSync('git', ['init', '-q', '-b', 'main', root], { encoding: 'utf8' });
+    assert.equal(init.status, 0, init.stderr);
+    const remote = spawnSync('git', ['-C', root, 'remote', 'add', 'origin', url], { encoding: 'utf8' });
+    assert.equal(remote.status, 0, remote.stderr);
+    const decide = () => checkCommand('git push origin main', { cwd: root, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
+    for (const content of ['not json', '{}', JSON.stringify({ version: 2, protectedPushes: [{ url, branches: ['main'] }] }),
+      JSON.stringify({ version: 1, protectedPushes: [{ url, branches: 'main' }] })]) {
+      fs.writeFileSync(file, content);
+      assert.equal(decide(), 'ask', content);
+    }
+    fs.writeFileSync(file, JSON.stringify({ version: 1, protectedPushes: [{ url, branches: ['main'] }] }));
+    assert.equal(decide(), 'allow');
+    fs.unlinkSync(file);
+    assert.equal(decide(), 'ask');
+  } finally {
+    assert.equal(path.dirname(root), os.tmpdir());
+    fs.rmSync(root, { recursive: true, force: true });
+  }
 });

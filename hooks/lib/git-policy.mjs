@@ -28,11 +28,12 @@ export function pushParts(args) {
 // A push asks only when it lands on main, master or the remote's default
 // branch, or when the target can't be worked out. `repo` answers questions
 // about the repo (hooks/lib/git-context.mjs); without it every push asks.
-function pushVerdict(args, shown, dir, repo) {
+function pushVerdict(args, shown, dir, repo, config) {
   if (!repo) return ['ask', `${shown} publishes commits to a remote.`];
   const { remote: named, refspecs, all, tags } = pushParts(args);
   if (all) return ['ask', `${shown} publishes every branch.`];
   if (tags) return ['ask', `${shown} publishes tags.`];
+  if (refspecs.some((spec) => spec.includes('*'))) return ['ask', `${shown} publishes multiple matching refs.`];
   const current = repo.currentBranch(dir);
   const targets = (refspecs.length ? refspecs : ['HEAD']).map((spec) => {
     let dst = spec.slice(spec.lastIndexOf(':') + 1);
@@ -44,9 +45,17 @@ function pushVerdict(args, shown, dir, repo) {
   if (targets.includes(null)) return ['ask', `${shown} publishes commits, and which branch it updates can't be worked out here.`];
   const tag = targets.find((t) => t.tag);
   if (tag) return ['ask', `${shown} publishes the tag ${tag.tag}.`];
+  const remote = named ?? repo.pushRemote(dir, current);
+  // A temporary approval covers one explicit branch on its actual push URL.
+  // Bare pushes and command-local configuration keep the normal checks.
+  const simpleOptions = args.filter((a) => a.startsWith('-'))
+    .every((a) => ['-u', '--set-upstream', '--'].includes(a));
+  const source = refspecs[0]?.split(':')[0];
+  const tagSource = source?.startsWith('refs/tags/') || (source && repo.isTag(dir, source));
+  if (!config.length && simpleOptions && !tagSource && named && refspecs.length === 1 && targets.length === 1
+    && repo.protectedPushAllowed?.(dir, remote, targets[0].branch)) return null;
   const hit = targets.find((t) => PROTECTED.includes(t.branch));
   if (hit) return ['ask', `${shown} publishes commits to ${hit.branch}.`];
-  const remote = named ?? repo.pushRemote(dir, current);
   const def = repo.defaultBranch(dir, remote);
   if (!def) return ['ask', `${shown} publishes commits, and the default branch of ${remote} can't be looked up.`];
   const onDefault = targets.find((t) => t.branch === def);
@@ -63,7 +72,7 @@ function verdict({ sub, args, config, cwd }, ctx) {
         || args.some((a) => a.startsWith('--force-with-lease') || a === '--force-if-includes' || /^[+:]/.test(a))) {
         return ['deny', `${shown} rewrites or deletes remote history. ${YOURSELF}`];
       }
-      return pushVerdict(args, shown, path.resolve(ctx.cwd ?? process.cwd(), ...cwd), ctx.repo);
+      return pushVerdict(args, shown, path.resolve(ctx.cwd ?? process.cwd(), ...cwd), ctx.repo, config);
     case 'commit':
       return hasFlag(args, '--no-verify', 'n') ? ['deny', `${shown} skips the repo's commit hooks, including the commit gate. Fix what the hook reports instead.`] : null;
     case 'reset':

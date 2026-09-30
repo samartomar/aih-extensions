@@ -77,6 +77,27 @@ The specialists draw on seven checklists in [`references/`](references/) (defini
 - **skill-guard** keeps `/code-review` and `/grilling` out of sub-agents, where they can't start their own sub-agents or interview you.
 - **The routing note** at session start points to `/ask-matt` and [`/ask-sam`](skills/ask-sam/SKILL.md), the router for this add-on.
 
+For an explicitly authorized bootstrap, a temporary local approval can allow normal
+pushes to one protected branch. Create `~/.aih-extensions/push-approvals.json`
+(`AIH_EXTENSIONS_HOME` when set):
+
+```json
+{
+  "version": 1,
+  "protectedPushes": [
+    { "url": "https://github.com/OWNER/REPOSITORY.git", "branches": ["main"] }
+  ]
+}
+```
+
+Use the exact URL reported by `git remote get-url --push --all origin`; every push
+destination must match an approval. Only a named remote and one explicit branch are
+covered, such as `git push origin main`. Destructive commands, force pushes, tags,
+bare or multi-branch pushes, and command-local Git configuration retain their normal
+checks. Missing or malformed approval files grant no exception. Keep this file local;
+remove its entry when the authorized work ends. Reinstalling or uninstalling the
+direct installation clears temporary approvals with the installation directory.
+
 ## Calling a skill
 
 | Claude Code, Cursor, opencode | Codex | Kimi Code |

@@ -42,7 +42,7 @@ An issue is updated, not duplicated, while upstream keeps moving. The same scrip
 
 ## Checks
 
-- `npm test`: 128 cases, 93 of them git-guard inputs (every bypass found in review, each tool's input shape, and which pushes ask, against a real repo whose default branch isn't `main`), 14 commit-gate cases against real git repos, and the installer's placement and config edits.
+- `npm test`: git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate cases against real Git repositories, and the installer's placement and config edits.
 - `npm run validate`: `claude plugin validate . --strict`.
 - After changing an adapter or a tool's paths: install, then run that tool once in a throwaway repo, as described in [tools.md](tools.md#verified-live).
 
