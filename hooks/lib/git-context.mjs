@@ -2,6 +2,9 @@
 // branch, the remote a bare `git push` uses, and the remote's default branch.
 // Each lookup returns null when it can't tell, and the policy then asks.
 import { execFileSync } from 'node:child_process';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
 
 function git(dir, args, timeout = 3000) {
   try {
@@ -14,14 +17,32 @@ function git(dir, args, timeout = 3000) {
 
 // Memoised per call site: one hook run may read the command as bash and as
 // PowerShell, and the default-branch lookup can go over the network.
-export function gitContext() {
+export function gitContext({ approvalsFile = path.join(process.env.AIH_EXTENSIONS_HOME || path.join(os.homedir(), '.aih-extensions'), 'push-approvals.json') } = {}) {
   const seen = new Map();
   const memo = (name, fn) => (...a) => {
     const key = `${name}\0${a.join('\0')}`;
     if (!seen.has(key)) seen.set(key, fn(...a));
     return seen.get(key);
   };
-  return Object.fromEntries(Object.entries(lookups).map(([k, fn]) => [k, memo(k, fn)]));
+  return Object.fromEntries(Object.entries({
+    ...lookups,
+    protectedPushAllowed: (dir, remote, branch) => approvedPush(approvalsFile, dir, remote, branch),
+  }).map(([k, fn]) => [k, memo(k, fn)]));
+}
+
+function approvedPush(file, dir, remote, branch) {
+  if (!branch || git(dir, ['check-ref-format', `refs/heads/${branch}`]) === null) return false;
+  if (git(dir, ['config', '--bool', '--get', 'push.followTags']) === 'true'
+    || git(dir, ['config', '--bool', '--get', `remote.${remote}.mirror`]) === 'true'
+    || git(dir, ['config', '--get-all', `remote.${remote}.push`])) return false;
+  let config;
+  try { config = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return false; }
+  if (config?.version !== 1 || !Array.isArray(config.protectedPushes)) return false;
+  const urls = git(dir, ['remote', 'get-url', '--push', '--all', '--', remote]);
+  if (!urls) return false;
+  // Git expands pushInsteadOf and pushurl here. Every destination must be approved.
+  return urls.split(/\r?\n/).every((url) => config.protectedPushes.some((entry) =>
+    entry?.url === url && Array.isArray(entry.branches) && entry.branches.includes(branch)));
 }
 
 const lookups = {

@@ -10,7 +10,7 @@
 | `hooks/lib/` | The git policy and the shell reader it uses | Yes |
 | `hooks/` | Adapters: `git-guard.mjs` (Claude's hook protocol, also read by Cursor, Codex and Kimi Code), `opencode-plugin.mjs`, `skill-guard.mjs`, `lanes-card.mjs` | Yes |
 | `scripts/` | `vendor.mjs`, `setup.mjs` with `tools.mjs` (where each tool reads what), `check-upstream.mjs`, `measure-context.mjs` | Yes |
-| `.github/workflows/` | `tests.yml` on every push and pull request (Windows and Linux); `upstream.yml` every 3 days | Yes |
+| `.github/workflows/` | `tests.yml` on main pushes and pull requests (Windows and Linux); `upstream.yml` every 3 days | Yes |
 | `tests/`, `evals/` | Hook and installer tests; with-and-without evals | Yes |
 | `.claude-plugin/` | For the Claude Code plugin route and `claude plugin eval` | Yes |
 
@@ -37,14 +37,21 @@ An issue is updated, not duplicated, while upstream keeps moving. The same scrip
 1. Change the `sha` in `scripts/upstream.config.mjs`.
 2. Run `npm run vendor`, and fix or drop any patch it rejects. Never loosen a count.
 3. Read the upstream diff. Exact patches catch changed wording, not changed meaning.
-4. Run `npm test` and `npm run validate`, and `npm run context` if descriptions changed (update the number in `evals/README.md`).
-5. Run `claude plugin eval . --runs 2 --no-publish` if a skill's description changed.
+4. Run the required checks below. Review changed prompt-loaded text separately from hook or installer behavior.
 
 ## Checks
 
-- `npm test`: 128 cases, 93 of them git-guard inputs (every bypass found in review, each tool's input shape, and which pushes ask, against a real repo whose default branch isn't `main`), 14 commit-gate cases against real git repos, and the installer's placement and config edits.
-- `npm run validate`: `claude plugin validate . --strict`.
-- After changing an adapter or a tool's paths: install, then run that tool once in a throwaway repo, as described in [tools.md](tools.md#verified-live).
+Before committing, run `npm run vendor`, `npm test` and `npm run validate`:
+
+- Vendoring reproduces the generated files and `vendor.lock.json` from the pinned upstreams. Review any resulting diff; include intended generated changes in the commit. CI regenerates them and rejects a diff against the committed files.
+- Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.
+- Validation explicitly checks both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` with the official `claude plugin validate <manifest> --strict` command. Passing a directory selects the marketplace manifest, so it does not establish that both were checked. CI installs Claude Code 2.1.285 on its disposable runner. Validation makes no model request and requires no account credentials.
+
+The required CI checks run on Windows and Linux. After changing an adapter or a tool's paths, also install and run that tool once in a throwaway repo, as described in [tools.md](tools.md#verified-live). Unit checks of its protocol do not establish the tool's live behavior.
+
+For changes to prompt-loaded text (skill names/descriptions, invocation metadata, skill instructions, or the session routing note in `hooks/lanes.md`), `npm run context` and `claude plugin eval . --runs 2 --no-publish` provide advisory model evidence. Hook policy/implementation and installer changes use the deterministic checks above; changing a hook only triggers measurement review when its emitted prompt text changes. These measurements use paid model access and are outside required CI. If access is unavailable, record the measurement as unavailable and retain the dated result in [evals/README.md](../evals/README.md); that does not block unrelated behavior changes.
+
+A new claim about context cost or skill effectiveness needs fresh successful measurement with its date, model and conditions. Promoting a skill to auto invocation still requires a fresh with-and-without eval showing a gain; an old snapshot or an unavailable run cannot justify promotion.
 
 ## Releasing
 

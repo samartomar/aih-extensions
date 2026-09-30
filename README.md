@@ -77,6 +77,30 @@ The specialists draw on seven checklists in [`references/`](references/) (defini
 - **skill-guard** keeps `/code-review` and `/grilling` out of sub-agents, where they can't start their own sub-agents or interview you.
 - **The routing note** at session start points to `/ask-matt` and [`/ask-sam`](skills/ask-sam/SKILL.md), the router for this add-on.
 
+For an explicitly authorized bootstrap, a temporary local approval can allow normal
+pushes to one protected branch. Create `~/.aih-extensions/push-approvals.json`
+(`AIH_EXTENSIONS_HOME` when set):
+
+```json
+{
+  "version": 1,
+  "protectedPushes": [
+    { "url": "https://github.com/OWNER/REPOSITORY.git", "branches": ["main"] }
+  ]
+}
+```
+
+Use the exact URL reported by `git remote get-url --push --all origin`; every push
+destination must match an approval. Use a single direct Git command with a named
+remote and one fully qualified branch destination, such as
+`git push origin HEAD:refs/heads/main`. Source-only or unqualified refspecs,
+configured remote push mappings, compound commands (including directory changes),
+and nested shells retain their normal checks, as do destructive commands, force
+pushes, tags, bare or multi-branch pushes, and command-local Git configuration.
+Missing or malformed approval files grant no exception. Keep this file local;
+remove its entry when the authorized work ends. Reinstalling or uninstalling the
+direct installation clears temporary approvals with the installation directory.
+
 ## Calling a skill
 
 | Claude Code, Cursor, opencode | Codex | Kimi Code |
@@ -128,7 +152,7 @@ For Claude Code alone, `node scripts/setup.mjs install --marketplace --yes` inst
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a pull request, run `npm run vendor`, `npm test` and `npm run validate`; [docs/maintaining.md](docs/maintaining.md) explains each.
+Issues and pull requests are welcome. Before opening a pull request, run `npm run vendor`, `npm test` and `npm run validate`; these deterministic checks also run in CI. [The maintaining guide](docs/maintaining.md#checks) explains the checks, when live tool verification applies, and the separate advisory model measurements for prompt-loaded changes.
 
 ## Credits
 

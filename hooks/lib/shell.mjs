@@ -164,17 +164,34 @@ export function gitCommands(command, { powershell = false } = {}, depth = 0) {
     if (!words.length) continue;
     const head = base(words[0]);
     const inner = nested(head, words);
-    if (inner) { found.push(...gitCommands(inner.command, { powershell: inner.powershell }, depth + 1)); continue; }
+    if (inner) {
+      const commands = gitCommands(inner.command, { powershell: inner.powershell }, depth + 1);
+      if (words.length !== raw.length) for (const c of commands) c.config.push('command-prefix');
+      found.push(...commands);
+      continue;
+    }
     if (head !== 'git') continue;
-    const cwd = [], config = [];
+    // Wrappers or environment assignments may change the repository/config
+    // seen by Git. They must not inherit a temporary protected-push approval.
+    const cwd = [], config = words.length === raw.length ? [] : ['command-prefix'];
     let i = 1;
     for (; i < words.length && words[i].startsWith('-'); i++) {
       const w = words[i];
       if (w === '-C') cwd.push(words[++i]);
       else if (w === '-c') config.push(words[++i] ?? '');
-      else if (['--git-dir', '--work-tree', '--namespace', '--exec-path', '--config-env'].includes(w)) i++;
+      else if (w.startsWith('-c')) config.push(w.slice(2));
+      else {
+        config.push(w);
+        if (['--git-dir', '--work-tree', '--namespace', '--exec-path', '--config-env'].includes(w)) i++;
+      }
     }
     if (i < words.length) found.push({ sub: words[i], args: words.slice(i + 1), cwd, config });
+  }
+  // An approval can use the reported cwd only for a single direct Git command.
+  // Compound commands and nested shells may change directory or environment;
+  // leave their pushes to the normal policy instead of interpreting shell state.
+  if (segs.length !== 1 || subs.length || base(stripPrefix(segs[0] ?? [])[0]) !== 'git') {
+    for (const c of found) c.config.push('shell-context');
   }
   return found;
 }
