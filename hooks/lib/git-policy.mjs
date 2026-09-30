@@ -52,7 +52,8 @@ function pushVerdict(args, shown, dir, repo, config) {
     .every((a) => ['-u', '--set-upstream', '--'].includes(a));
   const source = refspecs[0]?.split(':')[0];
   const tagSource = source?.startsWith('refs/tags/') || (source && repo.isTag(dir, source));
-  if (!config.length && simpleOptions && !tagSource && named && refspecs.length === 1 && targets.length === 1
+  const explicitBranch = /^[^:]+:refs\/heads\/.+$/.test(refspecs[0] ?? '');
+  if (!config.length && simpleOptions && explicitBranch && !tagSource && named && refspecs.length === 1 && targets.length === 1
     && repo.protectedPushAllowed?.(dir, remote, targets[0].branch)) return null;
   const hit = targets.find((t) => PROTECTED.includes(t.branch));
   if (hit) return ['ask', `${shown} publishes commits to ${hit.branch}.`];

@@ -33,7 +33,8 @@ export function gitContext({ approvalsFile = path.join(process.env.AIH_EXTENSION
 function approvedPush(file, dir, remote, branch) {
   if (!branch || git(dir, ['check-ref-format', `refs/heads/${branch}`]) === null) return false;
   if (git(dir, ['config', '--bool', '--get', 'push.followTags']) === 'true'
-    || git(dir, ['config', '--bool', '--get', `remote.${remote}.mirror`]) === 'true') return false;
+    || git(dir, ['config', '--bool', '--get', `remote.${remote}.mirror`]) === 'true'
+    || git(dir, ['config', '--get-all', `remote.${remote}.push`])) return false;
   let config;
   try { config = JSON.parse(fs.readFileSync(file, 'utf8')); } catch { return false; }
   if (config?.version !== 1 || !Array.isArray(config.protectedPushes)) return false;

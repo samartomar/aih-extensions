@@ -219,23 +219,25 @@ test('temporary protected-push approval follows the actual URL and explicit bran
     g('remote', 'add', 'origin', url);
     g('symbolic-ref', 'refs/remotes/origin/HEAD', 'refs/remotes/origin/main');
     const decide = (command) => checkCommand(command, { cwd: work, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
-    assert.equal(decide('git push origin main'), 'ask', 'no approval is the default');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'no approval is the default');
     fs.writeFileSync(file, JSON.stringify({ version: 1, protectedPushes: [{ url, branches: ['main'] }] }));
-    for (const command of ['git push origin main', 'git push -u origin HEAD', 'git push origin HEAD:refs/heads/main']) {
+    for (const command of ['git push origin HEAD:refs/heads/main', 'git push -u origin HEAD:refs/heads/main',
+      'git push origin refs/heads/main:refs/heads/main']) {
       assert.equal(decide(command), 'allow', command);
     }
-    for (const command of ['git push', 'git push origin', 'git push origin master', 'git push origin main feature',
+    for (const command of ['git push', 'git push origin', 'git push origin main', 'git push origin HEAD',
+      'git push origin HEAD:main', 'git push origin master', 'git push origin main feature',
       'git push --all origin', 'git push --tags origin', 'git push --follow-tags origin main', 'git push origin refs/notes/n',
-      'git push --fo origin main', 'git push --receive-pack=other origin main',
+      'git push --fo origin HEAD:refs/heads/main', 'git push --receive-pack=other origin HEAD:refs/heads/main',
       'git push origin refs/tags/release:refs/heads/main', 'git push origin refs/heads/*:refs/heads/*',
-      'git -c remote.origin.pushurl=https://github.com/example/other.git push origin main',
-      'git -cremote.origin.pushurl=https://github.com/example/other.git push origin main',
-      'git --config-env=remote.origin.pushurl=OTHER_URL push origin main',
-      'git --config-env remote.origin.pushurl=OTHER_URL push origin main',
-      'git --git-dir=other/.git push origin main', 'git --git-dir other/.git push origin main',
-      'git --work-tree=other push origin main', 'git --namespace=other push origin main',
-      'GIT_CONFIG_COUNT=1 git push origin main', 'env GIT_CONFIG_COUNT=1 git push origin main',
-      "env GIT_CONFIG_COUNT=1 bash -c 'git push origin main'"]) {
+      'git -c remote.origin.pushurl=https://github.com/example/other.git push origin HEAD:refs/heads/main',
+      'git -cremote.origin.pushurl=https://github.com/example/other.git push origin HEAD:refs/heads/main',
+      'git --config-env=remote.origin.pushurl=OTHER_URL push origin HEAD:refs/heads/main',
+      'git --config-env remote.origin.pushurl=OTHER_URL push origin HEAD:refs/heads/main',
+      'git --git-dir=other/.git push origin HEAD:refs/heads/main', 'git --git-dir other/.git push origin HEAD:refs/heads/main',
+      'git --work-tree=other push origin HEAD:refs/heads/main', 'git --namespace=other push origin HEAD:refs/heads/main',
+      'GIT_CONFIG_COUNT=1 git push origin HEAD:refs/heads/main', 'env GIT_CONFIG_COUNT=1 git push origin HEAD:refs/heads/main',
+      "env GIT_CONFIG_COUNT=1 bash -c 'git push origin HEAD:refs/heads/main'"]) {
       assert.equal(decide(command), 'ask', command);
     }
     for (const command of ['git push --force origin main', 'git push --force-with-lease origin main', 'git push origin +main',
@@ -244,24 +246,24 @@ test('temporary protected-push approval follows the actual URL and explicit bran
       assert.equal(decide(command), 'deny', command);
     }
     const hook = spawnSync('node', [HOOK, '--no-ask', '--any-shell'], {
-      input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: `git -C "${work.split(path.sep).join('/')}" push origin main` }, cwd: root }),
+      input: JSON.stringify({ tool_name: 'Bash', tool_input: { command: `git -C "${work.split(path.sep).join('/')}" push origin HEAD:refs/heads/main` }, cwd: root }),
       encoding: 'utf8', env: { ...process.env, AIH_EXTENSIONS_HOME: own },
     });
     assert.equal(hook.status, 0, hook.stderr);
     assert.equal(hook.stdout.trim(), '', 'the installed hook protocol permits the approved push');
     g('config', 'push.followTags', 'true');
-    assert.equal(decide('git push origin main'), 'ask', 'implicit tags are outside the approval');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'implicit tags are outside the approval');
     g('config', '--unset', 'push.followTags');
     g('config', 'remote.origin.mirror', 'true');
-    assert.equal(decide('git push origin main'), 'ask', 'configured mirroring is outside the approval');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'configured mirroring is outside the approval');
     g('config', '--unset', 'remote.origin.mirror');
     g('remote', 'set-url', '--push', 'origin', 'https://github.com/example/other.git');
-    assert.equal(decide('git push origin main'), 'ask', 'fetch URL does not authorize a different push URL');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'fetch URL does not authorize a different push URL');
     g('remote', 'set-url', '--add', '--push', 'origin', url);
-    assert.equal(decide('git push origin main'), 'ask', 'every push URL must be approved');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'every push URL must be approved');
     g('config', '--unset-all', 'remote.origin.pushurl');
     g('config', 'url.https://github.com/example/other.git.pushInsteadOf', url);
-    assert.equal(decide('git push origin main'), 'ask', 'rewritten push URL must be approved');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'rewritten push URL must be approved');
   } finally {
     assert.equal(path.dirname(root), os.tmpdir());
     fs.rmSync(root, { recursive: true, force: true });
@@ -277,7 +279,7 @@ test('invalid, missing, or revoked temporary approval restores protected-push ch
     assert.equal(init.status, 0, init.stderr);
     const remote = spawnSync('git', ['-C', root, 'remote', 'add', 'origin', url], { encoding: 'utf8' });
     assert.equal(remote.status, 0, remote.stderr);
-    const decide = () => checkCommand('git push origin main', { cwd: root, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
+    const decide = () => checkCommand('git push origin HEAD:refs/heads/main', { cwd: root, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
     for (const content of ['not json', '{}', JSON.stringify({ version: 2, protectedPushes: [{ url, branches: ['main'] }] }),
       JSON.stringify({ version: 1, protectedPushes: [{ url, branches: 'main' }] })]) {
       fs.writeFileSync(file, content);
@@ -289,6 +291,71 @@ test('invalid, missing, or revoked temporary approval restores protected-push ch
     assert.equal(decide(), 'ask');
   } finally {
     assert.equal(path.dirname(root), os.tmpdir());
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('temporary approval cannot follow a shell directory change into another repo', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-gate-'));
+  try {
+    const approved = path.join(root, 'approved'), other = path.join(root, 'other');
+    const file = path.join(root, 'push-approvals.json');
+    const url = 'https://github.com/example/approved.git';
+    for (const [repo, remote] of [[approved, url], [other, 'https://github.com/example/unapproved.git']]) {
+      for (const args of [['init', '-q', '-b', 'main', repo], ['-C', repo, 'remote', 'add', 'origin', remote]]) {
+        const r = spawnSync('git', args, { encoding: 'utf8' });
+        assert.equal(r.status, 0, r.stderr);
+      }
+    }
+    fs.writeFileSync(file, JSON.stringify({ version: 1, protectedPushes: [{ url, branches: ['main'] }] }));
+    const decide = (command, powershell = false) => checkCommand(command, {
+      cwd: approved, powershell, repo: gitContext({ approvalsFile: file }),
+    })?.decision ?? 'allow';
+    const destination = other.split(path.sep).join('/');
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'allow');
+    assert.equal(decide(`git -C "${destination}" push origin HEAD:refs/heads/main`), 'ask');
+    for (const command of [`cd "${destination}" && git push origin HEAD:refs/heads/main`,
+      `pushd "${destination}"; git push origin HEAD:refs/heads/main`,
+      `bash -c 'cd "${destination}" && git push origin HEAD:refs/heads/main'`,
+      `cmd /c 'cd /d "${destination}" && git push origin HEAD:refs/heads/main'`]) {
+      assert.equal(decide(command), 'ask', command);
+    }
+    for (const command of [`Set-Location "${destination}"; git push origin HEAD:refs/heads/main`,
+      `sl "${destination}"; git push origin HEAD:refs/heads/main`,
+      `chdir "${destination}"; git push origin HEAD:refs/heads/main`,
+      `Push-Location "${destination}"; git push origin HEAD:refs/heads/main`,
+      `pushd "${destination}"; git push origin HEAD:refs/heads/main`,
+      `pwsh -WorkingDirectory "${destination}" -Command 'git push origin HEAD:refs/heads/main'`]) {
+      assert.equal(decide(command, true), 'ask', command);
+    }
+  } finally {
+    assert.equal(path.dirname(path.resolve(root)), path.resolve(os.tmpdir()));
+    fs.rmSync(root, { recursive: true, force: true });
+  }
+});
+
+test('temporary approval requires an unambiguous branch destination despite push mappings', () => {
+  const root = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-gate-'));
+  try {
+    const file = path.join(root, 'push-approvals.json');
+    const url = 'https://github.com/example/approved.git';
+    const g = (...args) => {
+      const r = spawnSync('git', ['-C', root, ...args], { encoding: 'utf8' });
+      assert.equal(r.status, 0, r.stderr);
+    };
+    g('init', '-q', '-b', 'main');
+    g('remote', 'add', 'origin', url);
+    fs.writeFileSync(file, JSON.stringify({ version: 1, protectedPushes: [{ url, branches: ['main'] }] }));
+    const decide = (command) => checkCommand(command, { cwd: root, repo: gitContext({ approvalsFile: file }) })?.decision ?? 'allow';
+    assert.equal(decide('git push origin HEAD:refs/heads/main'), 'allow');
+    assert.equal(decide('git push origin HEAD:main'), 'ask', 'unqualified destination may be a remote tag');
+    for (const mapping of ['main:refs/heads/master', 'main:refs/tags/main']) {
+      g('config', 'remote.origin.push', mapping);
+      assert.equal(decide('git push origin main'), 'ask', mapping);
+      assert.equal(decide('git push origin HEAD:refs/heads/main'), 'ask', 'configured push mappings retain normal checks');
+    }
+  } finally {
+    assert.equal(path.dirname(path.resolve(root)), path.resolve(os.tmpdir()));
     fs.rmSync(root, { recursive: true, force: true });
   }
 });

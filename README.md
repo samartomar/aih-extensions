@@ -91,10 +91,13 @@ pushes to one protected branch. Create `~/.aih-extensions/push-approvals.json`
 ```
 
 Use the exact URL reported by `git remote get-url --push --all origin`; every push
-destination must match an approval. Only a named remote and one explicit branch are
-covered, such as `git push origin main`. Destructive commands, force pushes, tags,
-bare or multi-branch pushes, and command-local Git configuration retain their normal
-checks. Missing or malformed approval files grant no exception. Keep this file local;
+destination must match an approval. Use a single direct Git command with a named
+remote and one fully qualified branch destination, such as
+`git push origin HEAD:refs/heads/main`. Source-only or unqualified refspecs,
+configured remote push mappings, compound commands (including directory changes),
+and nested shells retain their normal checks, as do destructive commands, force
+pushes, tags, bare or multi-branch pushes, and command-local Git configuration.
+Missing or malformed approval files grant no exception. Keep this file local;
 remove its entry when the authorized work ends. Reinstalling or uninstalling the
 direct installation clears temporary approvals with the installation directory.
 

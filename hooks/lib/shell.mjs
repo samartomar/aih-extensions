@@ -187,6 +187,12 @@ export function gitCommands(command, { powershell = false } = {}, depth = 0) {
     }
     if (i < words.length) found.push({ sub: words[i], args: words.slice(i + 1), cwd, config });
   }
+  // An approval can use the reported cwd only for a single direct Git command.
+  // Compound commands and nested shells may change directory or environment;
+  // leave their pushes to the normal policy instead of interpreting shell state.
+  if (segs.length !== 1 || subs.length || base(stripPrefix(segs[0] ?? [])[0]) !== 'git') {
+    for (const c of found) c.config.push('shell-context');
+  }
   return found;
 }
 
