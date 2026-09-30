@@ -152,7 +152,7 @@ For Claude Code alone, `node scripts/setup.mjs install --marketplace --yes` inst
 
 ## Contributing
 
-Issues and pull requests are welcome. Before opening a pull request, run `npm run vendor`, `npm test` and `npm run validate`; [docs/maintaining.md](docs/maintaining.md) explains each.
+Issues and pull requests are welcome. Before opening a pull request, run `npm run vendor`, `npm test` and `npm run validate`; these deterministic checks also run in CI. [The maintaining guide](docs/maintaining.md#checks) explains the checks, when live tool verification applies, and the separate advisory model measurements for prompt-loaded changes.
 
 ## Credits
 
