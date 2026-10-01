@@ -36,7 +36,7 @@ Running Matt's and Addy's collections side by side gives two skills each for int
 ### Core lifecycle (Matt Pocock)
 
 ```
-/grill-with-docs  →  /to-spec  →  /to-tickets  →  /implement  →  /code-review  →  /retro
+/grill-with-docs  →  /to-spec  →  /to-tickets  →  /implement  →  /code-review  →   /retro
  agree on terms      write it     slice it        test-first     standards + spec  improve the setup
 ```
 
