@@ -91,7 +91,8 @@ if (moved.length && apply) {
   }
 
   if (vendor.status === 0) {
-    const tests = run(process.execPath, ['--test', 'tests/*.test.mjs']);
+    // Pin the spec reporter: Node 22 prints TAP when piped, which has no ℹ summary lines.
+    const tests = run(process.execPath, ['--test', '--test-reporter=spec', 'tests/*.test.mjs']);
     const summary = `${tests.stdout ?? ''}`.split('\n').filter((l) => /^ℹ (tests|pass|fail) /.test(l)).join(', ').replace(/ℹ /g, '');
     report.steps.push({ step: 'Tests', ok: tests.status === 0, detail: tests.status === 0 ? summary : tail(tests, 25) });
   }

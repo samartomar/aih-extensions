@@ -1,6 +1,6 @@
 {
   "name": "aih-extensions",
-  "version": "0.4.0",
+  "version": "0.4.1",
   "private": true,
   "type": "module",
   "description": "Specialist add-on for Matt Pocock's skills: Addy Osmani's security, performance, observability, CI, docs and launch skills, /ship with its reviewer agents, and a git guard, for Claude Code, Codex, Cursor, Kimi Code and opencode.",
