@@ -36,11 +36,11 @@ Running Matt's and Addy's collections side by side gives two skills each for int
 ### Core lifecycle (Matt Pocock)
 
 ```
-/grill-with-docs  →  /to-spec  →  /to-tickets  →  /implement  →  /code-review
- agree on terms      write it     slice it        test-first     standards + spec
+/grill-with-docs  →  /to-spec  →  /to-tickets  →  /implement  →  /code-review  →   /retro
+ agree on terms      write it     slice it        test-first     standards + spec  improve the setup
 ```
 
-Bugs go to `/diagnosing-bugs`, module shape to `/codebase-design`. When unsure, type `/ask-matt`. All 25 skills are described in [Matt's reference](https://github.com/mattpocock/skills#reference).
+Instead of `/implement` per ticket, `/implement-spec` builds a whole spec on one integration branch, with subagents working the ready tickets in parallel. Bugs go to `/diagnosing-bugs`, module shape to `/codebase-design`. When unsure, type `/ask-matt`. All 27 skills are described in [Matt's reference](https://github.com/mattpocock/skills#reference).
 
 ### On-demand specialists (Addy Osmani)
 
