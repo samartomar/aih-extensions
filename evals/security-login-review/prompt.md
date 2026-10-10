@@ -1,9 +1,11 @@
 ---
 description: "A pre-ship security review of a login handler with several classic flaws."
-expected_outcome: "security-and-hardening fires; the reply names SQL injection, plaintext passwords, missing brute-force protection and the weak session cookie, with fixes."
+expected_outcome: "security-and-hardening is explicitly invoked; the reply names SQL injection, plaintext passwords, missing brute-force protection and the weak session cookie, with fixes."
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
+
+Use /security-and-hardening for this task.
 
 Review this login handler for security before we ship it.
 

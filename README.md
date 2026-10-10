@@ -44,7 +44,9 @@ Instead of `/implement` per ticket, `/implement-spec` builds a whole spec on one
 
 ### On-demand specialists (Addy Osmani)
 
-**Auto** skills also start on their own when the task fits. The rest run only when typed, because an eval found plain models matched them on typical prompts ([evals/README.md](evals/README.md)).
+**Auto** skills can start when the task fits. The others require an explicit user
+request. The small [dated evaluation](evals/README.md) supports only its stated
+cases; several specialists were not evaluated. Promotions need fresh evidence.
 
 | Skill | Auto | Use it for |
 |---|---|---|
@@ -134,7 +136,7 @@ Removes every file and config entry the install added, for every tool, and nothi
 ## Limits
 
 - **git-guard reads command text; it does not parse shell like a shell does.** It unwraps `bash -c`, `pwsh -Command`, `eval`, `$(…)` and line continuations, but a script file, an alias or a command assembled at runtime gets past it.
-- **The commit gate uses regular expressions on the staged diff**, and people can skip it with `git commit --no-verify` (git-guard stops agents from doing that).
+- **The commit gate uses regular expressions on the staged diff**, and people can skip it with `git commit --no-verify` (an enabled git-guard can block that agent command).
 - **Coverage differs by tool.** skill-guard is Claude Code only, Kimi Code gets no session-start note, and `/ship` and `/webperf` exist in Claude Code, Cursor and opencode only.
 - **Start Cursor's CLI from PowerShell, cmd or Windows Terminal.** Started from Git Bash, it runs hooks through the wrong shell and refuses every shell command, whatever the hook.
 - **Updates are reviewed, not automatic.** Every 3 days a GitHub workflow checks both upstreams; when either moved, it re-vendors and tests on a branch and opens an issue for the maintainer ([docs/maintaining.md](docs/maintaining.md#updating-an-upstream-pin)). On your machine, run install again to move to newer pins.

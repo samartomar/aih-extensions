@@ -187,7 +187,7 @@ Agent starts work
     └── Feature complete → All commits form a clean history
 ```
 
-This pattern means you never lose more than one increment of work. If an agent goes off the rails, `git stash` the uncommitted work (recoverable) or `git revert` the bad commit. Destructive resets are blocked by the git-guard hook; run one yourself if you really mean it.
+This pattern means you never lose more than one increment of work. Before undoing work, inspect the diff and preserve unrelated changes. Reverse only the task-owned edits, or use git revert for the selected bad commit. Check enabled guards separately; a hook is not a substitute for scoped recovery.
 
 ## Change Summaries
 

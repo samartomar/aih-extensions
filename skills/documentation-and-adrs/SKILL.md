@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: "Writes user- and developer-facing documentation. Use when writing or updating a README, an API reference, OpenAPI docs, a changelog entry, or a comment explaining why code is the way it is. Architecture decision records belong to domain-modeling."
+description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments. ADRs belong to domain-modeling."
 disable-model-invocation: true
 ---
 
@@ -12,95 +12,14 @@ Document decisions, not just code. The most valuable documentation captures the 
 
 ## When to Use
 
-- Making a significant architectural decision
-- Choosing between competing approaches
-- Adding or changing a public API
-- Shipping a feature that changes user-facing behavior
-- Onboarding new team members (or agents) to the project
-- When you find yourself explaining the same thing repeatedly
-
-**When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.
+Write or update public API documentation, user guides, READMEs, changelogs and
+comments explaining a non-obvious choice. Route ADR work to `domain-modeling`;
+follow the repository's existing documentation format.
 
 ## Architecture Decision Records (ADRs)
 
-> In this setup ADRs are written by the `domain-modeling` skill (short form, in `docs/adr/`). Skip to Inline Documentation unless the repo already keeps long-form ADRs elsewhere.
-
-ADRs capture the reasoning behind significant technical decisions. They're the highest-value documentation you can write.
-
-### When to Write an ADR
-
-- Choosing a framework, library, or major dependency
-- Designing a data model or database schema
-- Selecting an authentication strategy
-- Deciding on an API architecture (REST vs. GraphQL vs. tRPC)
-- Choosing between build tools, hosting platforms, or infrastructure
-- Any decision that would be expensive to reverse
-
-### Match the existing convention first
-
-Before creating an ADR, inspect the available repository context for an established convention — existing ADRs, project instructions, and ADR-related configuration or tooling (e.g. an `.adr-dir` file). An established convention overrides the defaults below. Match:
-
-- **Location and format** — e.g. `docs/adr/*.md`, `Documentation/Decisions/*.rst`, a MADR layout, or an `adr-tools` setup. Match the existing directory, file extension, and markup (Markdown vs reStructuredText).
-- **Numbering and naming** — continue the existing sequence and filename pattern (`ADR-004-Title.rst`, `0004-title.md`, …); don't restart at 001 or introduce a second scheme.
-- **Section headings** — reuse the project's heading set rather than imposing this template's.
-
-If the available evidence conflicts, surface the conflict rather than silently introducing another scheme. Only when no convention can be established do you apply the default below.
-
-### ADR Template
-
-Store ADRs in `docs/decisions/` with sequential numbering (unless the project already uses another location — see above):
-
-```markdown
-# ADR-001: Use PostgreSQL for primary database
-
-## Status
-Accepted | Superseded by ADR-XXX | Deprecated
-
-## Date
-2025-01-15
-
-## Context
-We need a primary database for the task management application. Key requirements:
-- Relational data model (users, tasks, teams with relationships)
-- ACID transactions for task state changes
-- Support for full-text search on task content
-- Managed hosting available (for small team, limited ops capacity)
-
-## Decision
-Use PostgreSQL with Prisma ORM.
-
-## Alternatives Considered
-
-### MongoDB
-- Pros: Flexible schema, easy to start with
-- Cons: Our data is inherently relational; would need to manage relationships manually
-- Rejected: Relational data in a document store leads to complex joins or data duplication
-
-### SQLite
-- Pros: Zero configuration, embedded, fast for reads
-- Cons: Limited concurrent write support, no managed hosting for production
-- Rejected: Not suitable for multi-user web application in production
-
-### MySQL
-- Pros: Mature, widely supported
-- Cons: PostgreSQL has better JSON support, full-text search, and ecosystem tooling
-- Rejected: PostgreSQL is the better fit for our feature requirements
-
-## Consequences
-- Prisma provides type-safe database access and migration management
-- We can use PostgreSQL's full-text search instead of adding Elasticsearch
-- Team needs PostgreSQL knowledge (standard skill, low risk)
-- Hosting on managed service (Supabase, Neon, or RDS)
-```
-
-### ADR Lifecycle
-
-```
-PROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)
-```
-
-- **Don't delete old ADRs.** They capture historical context.
-- When a decision changes, write a new ADR that references and supersedes the old one.
+Use `domain-modeling` for ADRs, including repositories with an established
+long-form format. Continue here for user and developer documentation.
 
 ## Inline Documentation
 
