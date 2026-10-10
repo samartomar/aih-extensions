@@ -1,9 +1,11 @@
 ---
 description: "A readability refactor that must preserve behaviour."
-expected_outcome: "code-simplification fires; the result is simpler with identical behaviour, and the reply says how behaviour was checked."
+expected_outcome: "code-simplification is explicitly invoked; the result is simpler with identical behaviour, and the reply says how behaviour was checked."
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
+
+Use /code-simplification for this task.
 
 This works but is hard to read. Simplify it without changing behaviour.
 

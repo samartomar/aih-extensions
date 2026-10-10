@@ -1,9 +1,11 @@
 ---
 description: "Writing a README for a small CLI from its source."
-expected_outcome: "documentation-and-adrs fires; the README has a working quick start and documents only what the code does."
+expected_outcome: "documentation-and-adrs is explicitly invoked; the README has a working quick start and documents only what the code does."
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
+
+Use /documentation-and-adrs for this task.
 
 Write the README for this CLI. Put the complete README in your reply; do not create or edit files.
 

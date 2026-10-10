@@ -8,7 +8,7 @@
 //             carries [floor-ok: <reason>]. Merge commits skip the floor, since
 //             the incoming branch's lines are not this change.
 // Paths listed in .floorignore are skipped. People can still bypass with --no-verify;
-// aih-extensions' git-guard stops the coding agent from doing so.
+// an enabled aih-extensions git-guard can block that agent command.
 // Hook line: node .githooks/commit-gate.mjs "$1"     Check itself: node commit-gate.mjs --self-test
 import fs from 'node:fs';
 import path from 'node:path';

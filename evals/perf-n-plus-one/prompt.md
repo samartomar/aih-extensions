@@ -1,9 +1,11 @@
 ---
 description: "A slow endpoint with an N+1 query pattern."
-expected_outcome: "performance-optimization fires; the reply measures first, batches the queries, and proposes a budget or regression check."
+expected_outcome: "performance-optimization is explicitly invoked; the reply measures first, batches the queries, and proposes a budget or regression check."
 max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
+
+Use /performance-optimization for this task.
 
 GET /orders takes about 4 seconds for 200 orders. Make it fast.
 

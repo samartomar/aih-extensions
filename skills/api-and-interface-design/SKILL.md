@@ -1,6 +1,6 @@
 ---
 name: api-and-interface-design
-description: "Guides stable network API design. Use when creating or changing REST, GraphQL or RPC endpoints, versioning a public API, or defining the contract between frontend and backend. Module shape inside a codebase belongs to codebase-design."
+description: "Design stable REST, GraphQL and RPC contracts, compatibility and versioning. In-codebase module design belongs to codebase-design."
 disable-model-invocation: true
 ---
 

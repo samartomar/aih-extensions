@@ -93,17 +93,22 @@ export const patches = [
   {
     file: 'skills/api-and-interface-design/SKILL.md',
     find: 'description: Guides stable API and interface design. Use when designing APIs, module boundaries, or any public interface. Use when creating REST or GraphQL endpoints, defining type contracts between modules, or establishing boundaries between frontend and backend.',
-    replace: 'description: "Guides stable network API design. Use when creating or changing REST, GraphQL or RPC endpoints, versioning a public API, or defining the contract between frontend and backend. Module shape inside a codebase belongs to codebase-design."',
+    replace: 'description: "Design stable REST, GraphQL and RPC contracts, compatibility and versioning. In-codebase module design belongs to codebase-design."',
   },
   {
     file: 'skills/documentation-and-adrs/SKILL.md',
     find: 'description: Records decisions and documentation. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.',
-    replace: 'description: "Writes user- and developer-facing documentation. Use when writing or updating a README, an API reference, OpenAPI docs, a changelog entry, or a comment explaining why code is the way it is. Architecture decision records belong to domain-modeling."',
+    replace: 'description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments. ADRs belong to domain-modeling."',
   },
   {
-    file: 'skills/documentation-and-adrs/SKILL.md',
-    find: '## Architecture Decision Records (ADRs)\n',
-    replace: '## Architecture Decision Records (ADRs)\n\n> In this setup ADRs are written by the `domain-modeling` skill (short form, in `docs/adr/`). Skip to Inline Documentation unless the repo already keeps long-form ADRs elsewhere.\n',
+    "file": "skills/documentation-and-adrs/SKILL.md",
+    "find": "## When to Use\n\n- Making a significant architectural decision\n- Choosing between competing approaches\n- Adding or changing a public API\n- Shipping a feature that changes user-facing behavior\n- Onboarding new team members (or agents) to the project\n- When you find yourself explaining the same thing repeatedly\n\n**When NOT to use:** Don't document obvious code. Don't add comments that restate what the code already says. Don't write docs for throwaway prototypes.\n\n",
+    "replace": "## When to Use\n\nWrite or update public API documentation, user guides, READMEs, changelogs and\ncomments explaining a non-obvious choice. Route ADR work to `domain-modeling`;\nfollow the repository's existing documentation format.\n\n"
+  },
+  {
+    "file": "skills/documentation-and-adrs/SKILL.md",
+    "find": "## Architecture Decision Records (ADRs)\n\nADRs capture the reasoning behind significant technical decisions. They're the highest-value documentation you can write.\n\n### When to Write an ADR\n\n- Choosing a framework, library, or major dependency\n- Designing a data model or database schema\n- Selecting an authentication strategy\n- Deciding on an API architecture (REST vs. GraphQL vs. tRPC)\n- Choosing between build tools, hosting platforms, or infrastructure\n- Any decision that would be expensive to reverse\n\n### Match the existing convention first\n\nBefore creating an ADR, inspect the available repository context for an established convention — existing ADRs, project instructions, and ADR-related configuration or tooling (e.g. an `.adr-dir` file). An established convention overrides the defaults below. Match:\n\n- **Location and format** — e.g. `docs/adr/*.md`, `Documentation/Decisions/*.rst`, a MADR layout, or an `adr-tools` setup. Match the existing directory, file extension, and markup (Markdown vs reStructuredText).\n- **Numbering and naming** — continue the existing sequence and filename pattern (`ADR-004-Title.rst`, `0004-title.md`, …); don't restart at 001 or introduce a second scheme.\n- **Section headings** — reuse the project's heading set rather than imposing this template's.\n\nIf the available evidence conflicts, surface the conflict rather than silently introducing another scheme. Only when no convention can be established do you apply the default below.\n\n### ADR Template\n\nStore ADRs in `docs/decisions/` with sequential numbering (unless the project already uses another location — see above):\n\n```markdown\n# ADR-001: Use PostgreSQL for primary database\n\n## Status\nAccepted | Superseded by ADR-XXX | Deprecated\n\n## Date\n2025-01-15\n\n## Context\nWe need a primary database for the task management application. Key requirements:\n- Relational data model (users, tasks, teams with relationships)\n- ACID transactions for task state changes\n- Support for full-text search on task content\n- Managed hosting available (for small team, limited ops capacity)\n\n## Decision\nUse PostgreSQL with Prisma ORM.\n\n## Alternatives Considered\n\n### MongoDB\n- Pros: Flexible schema, easy to start with\n- Cons: Our data is inherently relational; would need to manage relationships manually\n- Rejected: Relational data in a document store leads to complex joins or data duplication\n\n### SQLite\n- Pros: Zero configuration, embedded, fast for reads\n- Cons: Limited concurrent write support, no managed hosting for production\n- Rejected: Not suitable for multi-user web application in production\n\n### MySQL\n- Pros: Mature, widely supported\n- Cons: PostgreSQL has better JSON support, full-text search, and ecosystem tooling\n- Rejected: PostgreSQL is the better fit for our feature requirements\n\n## Consequences\n- Prisma provides type-safe database access and migration management\n- We can use PostgreSQL's full-text search instead of adding Elasticsearch\n- Team needs PostgreSQL knowledge (standard skill, low risk)\n- Hosting on managed service (Supabase, Neon, or RDS)\n```\n\n### ADR Lifecycle\n\n```\nPROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)\n```\n\n- **Don't delete old ADRs.** They capture historical context.\n- When a decision changes, write a new ADR that references and supersedes the old one.\n\n",
+    "replace": "## Architecture Decision Records (ADRs)\n\nUse `domain-modeling` for ADRs, including repositories with an established\nlong-form format. Continue here for user and developer documentation.\n\n"
   },
 
   // --- Cross-references to skills Matt's plugin owns.
@@ -140,7 +145,7 @@ export const patches = [
   {
     file: 'skills/constraint-driven-development/SKILL.md',
     find: 'Then add one line to `AGENTS.md` and `CLAUDE.md`:',
-    replace: "Then add one line to whichever of `CLAUDE.md` or `AGENTS.md` the repo already has (don't create the other):",
+    replace: "Then add one line to the repository's maintained agent entry point, following its existing source-of-truth or import convention:",
   },
   { file: 'skills/constraint-driven-development/SKILL.md', find: "You're about to run `/build auto` or any autonomous loop", replace: "You're about to run `/implement` across a batch of tickets or any autonomous loop" },
   { file: 'skills/constraint-driven-development/SKILL.md', find: '| BUILD | `/build` |', replace: '| BUILD | post-edit hook |' },
@@ -154,7 +159,7 @@ export const patches = [
   {
     file: 'skills/git-workflow-and-versioning/SKILL.md',
     find: 'If an agent goes off the rails, `git reset --hard HEAD` takes you back to the last successful state.',
-    replace: 'If an agent goes off the rails, `git stash` the uncommitted work (recoverable) or `git revert` the bad commit. Destructive resets are blocked by the git-guard hook; run one yourself if you really mean it.',
+    replace: 'Before undoing work, inspect the diff and preserve unrelated changes. Reverse only the task-owned edits, or use git revert for the selected bad commit. Check enabled guards separately; a hook is not a substitute for scoped recovery.',
   },
   {
     file: 'skills/git-workflow-and-versioning/SKILL.md',

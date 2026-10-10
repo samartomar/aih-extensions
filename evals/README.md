@@ -6,6 +6,11 @@ Each folder here is one `claude plugin eval` case: a prompt, run with and withou
 claude plugin eval . --runs 2 --no-publish
 ```
 
+The typed-only cases explicitly request their skill. Quiet cases test that unrelated
+specialists remain unused; observability retains its automatic trigger. These
+current prompts have not been remeasured. Their results must not be compared with
+the historical routing counts below as if the invocation conditions were unchanged.
+
 ## Results
 
 2026-09-27, Sonnet, 2 runs per arm, $2.62. A score is the share of runs that passed a strict content grader.
@@ -23,7 +28,7 @@ claude plugin eval . --runs 2 --no-publish
 
 What it supports:
 
-- **Routing is right.** The expected skill fired in 11 of 12 runs, and stayed quiet in all 4 runs where it shouldn't fire.
+- **Routing in that sample:** the expected skill fired in 11 of 12 runs and stayed quiet in all 4 unrelated runs.
 - **Only observability measurably beat the plain model in this sample**, so it and `shipping-and-launch` (behind `/ship`) are the only specialists that start on their own. The rest run only when typed; promoting one in [`scripts/upstream.config.mjs`](../scripts/upstream.config.mjs) requires a fresh with-and-without eval showing a gain.
 - **The sample is small.** With two runs per arm, one run moves a score by 0.5. The two cases at 0 in both arms say nothing either way. The README case let the model write a file the grader never saw; it now asks for the text in the reply, and hasn't been re-run.
 

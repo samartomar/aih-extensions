@@ -138,7 +138,7 @@ number and no command in this column is an aspiration, not a constraint.
 | W1 | `no-explicit-any` | `src/legacy/**` | Rewrite tracked in ENG-441 | @addy | 2026-11-01 |
 ```
 
-Then add one line to whichever of `CLAUDE.md` or `AGENTS.md` the repo already has (don't create the other): `Read CONSTRAINTS.md before writing code. Do not weaken it to make a change pass.`
+Then add one line to the repository's maintained agent entry point, following its existing source-of-truth or import convention: `Read CONSTRAINTS.md before writing code. Do not weaken it to make a change pass.`
 
 ### Step 4: Install what each dimension needs
 
