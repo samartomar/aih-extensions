@@ -2,11 +2,11 @@
   "upstreams": {
     "addy": {
       "repo": "https://github.com/addyosmani/agent-skills.git",
-      "sha": "2686b620fc1fed2e8f60c704839c766b8594c6b6"
+      "sha": "1be8e34187e34647bb83adc3a1323b26ae6f6abe"
     },
     "matt": {
       "repo": "https://github.com/mattpocock/skills.git",
-      "sha": "d81f3a183412e71a5b1e84ca21bc1a35eea03a60"
+      "sha": "49dd158d1076134a641b33efb035946536778336"
     }
   },
   "generated": [
@@ -55,6 +55,7 @@
     "skills/observability-and-instrumentation/SKILL.md",
     "skills/performance-optimization/SKILL.md",
     "skills/performance-optimization/agents/openai.yaml",
+    "skills/performance-optimization/references/optimization-patterns.md",
     "skills/security-and-hardening/SKILL.md",
     "skills/security-and-hardening/agents/openai.yaml",
     "skills/security-and-hardening/references/hardening-patterns.md",
