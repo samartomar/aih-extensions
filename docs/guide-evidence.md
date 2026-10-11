@@ -31,6 +31,8 @@ targets and `--no-git-guard`. It completed with 188 owned file entries, version
 0.5.0 and guard disabled for Claude, Codex, Kimi and OpenCode (Cursor shares
 Claude). No real user configuration or host package installation was changed.
 The saved manual, icon and hash manifest were present alongside native entries.
+Actual disposable uninstall then completed with the saved manual and Kimi guide
+entry removed; the real user installation was never touched.
 
 `tests/guide-install.test.mjs` covers installation, update, conflict refusal,
 removal, lost-manifest hash-based cleanup, preservation of modified content,
@@ -41,7 +43,7 @@ source-commit stability after a generated-output commit and stale-output rejecti
 The installer regression was first observed failing because the manual was absent,
 then passed after integration.
 
-Required local checks passed: `npm run vendor` (no vendored diff), **138 tests**,
+Required local checks passed: `npm run vendor` (no vendored diff), **139 tests**,
 `npm run guide:check`, both `claude plugin validate <manifest> --strict`
 checks via `npm run validate`, and `git diff --check`. CI runs deterministic
 checks on Windows and Linux; a CI pass is not a native Linux-session claim.

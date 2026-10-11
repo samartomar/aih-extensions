@@ -3,7 +3,7 @@ import assert from 'node:assert/strict';
 import path from 'node:path';
 import { conflicts, stripGateLine, selectTools, TEMP_PREFIXES } from '../scripts/setup.mjs';
 import {
-  toolDirs, planFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy, isUserOnly,
+  toolDirs, planFor, guidePlanFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy, isUserOnly,
   opencodeAgent, codexAgent, kimiBlock, addTomlBlock, removeTomlBlock, addSkillDenies, removeSkillDenies, opencodePluginFile,
 } from '../scripts/tools.mjs';
 
@@ -74,6 +74,21 @@ const sources = {
   commands: [{ name: 'ship', src: '/a/commands/ship.md' }],
 };
 const skillHomes = (ops) => [...new Set(ops.filter((o) => /[\\/]skills[\\/]/.test(o.dest)).map((o) => path.dirname(o.dest)))];
+
+test('Guide placement respects client home overrides and keeps manual fallback shared', () => {
+  const homes = toolDirs('/h', { CLAUDE_CONFIG_DIR: '/isolated/claude', KIMI_CODE_HOME: '/isolated/kimi', XDG_CONFIG_HOME: '/isolated/config' });
+  const ops = guidePlanFor(['claude', 'codex', 'cursor', 'kimi', 'opencode'], homes, '/addon', '/owned');
+  assert.deepEqual(ops.filter(op => op.tool !== 'guide').map(op => op.dest), [
+    path.join('/isolated/claude', 'agents', 'aih-guide.md'),
+    path.join('/isolated/kimi', 'agents', 'aih-guide.md'),
+    path.join('/isolated/config', 'opencode', 'agents', 'aih-guide.md'),
+  ]);
+  assert.equal(ops.filter(op => op.guideFile === 'guide/MANUAL.md').length, 1);
+  const manual = ops.find(op => op.guideFile === 'guide/MANUAL.md');
+  assert.equal(manual.dest, path.join('/owned', 'guide', 'MANUAL.md'));
+  assert.equal(manual.src, path.join('/addon', 'guide', 'MANUAL.md'));
+  assert.deepEqual(guidePlanFor(['codex', 'cursor'], homes, '/addon', '/owned').map(op => op.tool), ['guide', 'guide', 'guide']);
+});
 
 test('every tool sees each skill exactly once, and nobody writes ~/.agents/skills', () => {
   const all = planFor(['claude', 'codex', 'cursor', 'kimi', 'opencode'], dirs, sources);

@@ -34,7 +34,7 @@ import { checkoutPinned, resolveRef } from './git-cache.mjs';
 import { UPSTREAM_CACHE } from './paths.mjs';
 import { verifyGuide } from './guide.mjs';
 import {
-  TOOLS, fwd, toolDirs, isUserOnly, planFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy,
+  TOOLS, fwd, toolDirs, isUserOnly, planFor, guidePlanFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy,
   kimiBlock, addTomlBlock, removeTomlBlock, addSkillDenies, removeSkillDenies, opencodePluginFile,
 } from './tools.mjs';
 
@@ -301,10 +301,7 @@ function installDirect() {
     !argv.includes('--no-git-guard') && (previous?.tools?.includes(t) ? previous.gitGuard?.[t] !== false && guardPresent(t) : true)]));
   const ocCommands = fs.existsSync(path.join(DIRS.opencode, 'command')) && !fs.existsSync(path.join(DIRS.opencode, 'commands')) ? 'command' : 'commands';
   const plan = planFor(tools, DIRS, sources, { opencodeCommandDir: ocCommands });
-  for (const tool of tools.filter(t => ['claude', 'kimi', 'opencode'].includes(t))) {
-    plan.push({ tool, dest: path.join(DIRS[tool], 'agents', 'aih-guide.md'), src: path.join(addonDir, 'guide', 'generated', tool, 'aih-guide.md') });
-  }
-  for (const file of ['MANUAL.md', 'manifest.json', 'compass.svg']) plan.push({ tool: 'guide', dest: path.join(OWN_DIR, 'guide', file), src: path.join(addonDir, 'guide', file) });
+  plan.push(...guidePlanFor(tools, DIRS, addonDir, OWN_DIR));
   if (tools.includes('opencode')) plan.push({ tool: 'opencode', dest: OPENCODE_PLUGIN, content: opencodePluginFile(HOOKS_DIR, { gitGuard: gitGuard.opencode }) });
   const clash = conflicts(plan, fs.existsSync, previous?.files ?? []);
   if (clash.length) {
@@ -387,12 +384,12 @@ function uninstall() {
 // A saved Guide identity allows conservative cleanup after the install manifest
 // is lost. Modified or unrelated files are retained, never guessed to be ours.
 function removeSavedGuide() {
-  const saved = path.join(OWN_DIR, 'guide', 'manifest.json');
+  const plan = guidePlanFor(TOOLS, DIRS, ROOT, OWN_DIR);
+  const saved = plan.find(entry => entry.guideFile === 'guide/manifest.json').dest;
   const identity = readJson(saved, null);
   if (identity?.id !== 'aih-guide' || !identity.files) return;
-  const candidates = ['MANUAL.md', 'compass.svg'].map(name => [path.join(OWN_DIR, 'guide', name), identity.files[`guide/${name}`]]);
-  for (const tool of ['claude', 'kimi', 'opencode']) candidates.push([path.join(DIRS[tool], 'agents', 'aih-guide.md'), identity.files[`guide/generated/${tool}/aih-guide.md`]]);
-  for (const [file, expected] of candidates) {
+  for (const { dest: file, guideFile } of plan.filter(entry => entry.dest !== saved)) {
+    const expected = identity.files[guideFile];
     if (!fs.existsSync(file)) continue;
     const actual = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
     if (actual === expected) step(`delete identified Guide file ${file}`, () => fs.rmSync(file));
