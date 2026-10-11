@@ -227,12 +227,12 @@ export function removeSkillDenies(config, names) {
 
 // The file opencode auto-loads from ~/.config/opencode/plugins. Every export must
 // be a function, or opencode drops the whole plugin with only a log line.
-export function opencodePluginFile(hooksDir) {
+export function opencodePluginFile(hooksDir, { gitGuard = true } = {}) {
   const url = `file:///${fwd(path.join(hooksDir, 'opencode-plugin.mjs')).replace(/^\/+/, '')}`;
   return [
     '// aih-extensions: added by its scripts/setup.mjs, removed by `uninstall`.',
     `import { createPlugin } from ${JSON.stringify(url)};`,
-    'export const AihExtensions = createPlugin();',
+    `export const AihExtensions = createPlugin(${gitGuard ? '' : '{ gitGuard: false }'});`,
     '',
   ].join('\n');
 }

@@ -37,3 +37,13 @@ What it supports:
 `npm run context` starts Claude Code headless with and without the add-on (skill-listing cap lifted) and compares input tokens. The **2026-09-27 snapshot** measured **576 added tokens** per session on top of Matt's skills, which added about 370 in that run. Typed-only skills were not listed to the model. This is a historical result, not a measurement of the current checkout.
 
 Record fresh successful results with their date and conditions before claiming a new context cost. An unavailable or failed run supplies no measurement; retain the previous dated snapshot rather than substituting zero. Model access or quota does not block unrelated hook, installer or maintainer changes.
+
+## Ask AIH Guide (2026-10-11)
+
+Guide recovery conversations and the saved-manual fallback were exercised with
+Kimi Code 2.1.1 / K3 on Windows; see [bounded evidence](../docs/guide-evidence.md).
+They are scenario evidence, not a with-and-without effectiveness measurement.
+Claude Code 2.1.296 model startup returned revoked OAuth / HTTP 401, so fresh
+Claude advisory context/eval measurements were unavailable and were not run.
+The historical context snapshot above remains historical; no new effectiveness,
+context-cost or auto-invocation-promotion claim is made.

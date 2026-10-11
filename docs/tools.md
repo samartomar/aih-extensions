@@ -14,6 +14,21 @@ Where each tool gets its skills, agents and git-guard, how typed-only skills sta
 
 Every checklist in `references/` goes next to each skills folder, where the skills' `../../references/` links resolve.
 
+Ask AIH Guide is authored outside vendored `agents/` and `references/`. The
+installer copies its generated Claude and Kimi Markdown agents to their user
+agent folders and its OpenCode `mode: primary` entry to the OpenCode agent
+folder. Kimi's entry embeds `${base_prompt}`. Codex and Cursor use the saved
+`~/.aih-extensions/guide/MANUAL.md` as their direct-conversation fallback.
+The manual, compass SVG and exact hash manifest are installed once, independently
+of tool count. Native selection, tested recovery and platform limits are in
+[Guide evidence](guide-evidence.md); inherited reviewer-subagent support does
+not prove a primary Guide session.
+
+An update retains a removed git guard on each direct adapter. Explicit
+`--no-git-guard` also disables it; Claude's skill guard and routing note,
+Codex's routing note and OpenCode's routing plugin remain. Cursor shares the
+Claude hooks. Unrelated user settings and files remain outside Guide ownership.
+
 Nothing goes into `~/.agents/skills`. Codex, Kimi Code, Cursor and opencode all read it, and opencode picks a random copy when two folders hold a skill with the same name. Cursor de-duplicates skills by folder name, so the copies in `~/.claude/skills` and `~/.codex/skills` count once.
 
 Every config edit is backed up first (`<file>.aih-bak-<time>`), leaves other entries (hindsight's hooks, for example) untouched, and is recorded in `~/.aih-extensions/manifest.json`. Uninstall works from that manifest, and finds our edits by marker if the manifest is gone.

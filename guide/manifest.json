@@ -1,0 +1,27 @@
+{
+  "id": "aih-guide",
+  "name": "Ask AIH Guide",
+  "description": "Guidance for diagnosing and recovering AI CLI setup.",
+  "icon": "compass.svg",
+  "version": "0.5.0",
+  "source": {
+    "repository": "https://github.com/samartomar/aih-extensions",
+    "commit": "8fe4e470e8851b774c3cf459b06a2d8fbafe036b",
+    "dirty": true,
+    "sha256": "604fe426d6e6edd6c92cc1c45a61cebf3b1c72a6f609cf25e44865e74b594a25"
+  },
+  "inputs": {
+    "guide/source.md": "66b93912f65023ab03e6063d101d90163eb8c73c5b23a8b9c5fb2aa079be22b6",
+    "guide/metadata.json": "dc3346a65202e9f106a364cc36785368c3c1005c75d88d0ca44c200da104bcb1",
+    "guide/compass.svg": "4701304fcce233002fdf732b8811f0022299222c8ca85fd0e9d9945102f46147",
+    "scripts/guide.mjs": "706b15f4e12997685151f9187cf3a007176c62cb1b7325642dc79a01fcc164ce",
+    "package.json": "7896a792e27961a1f9fcc71429543b52001b89480801949e600ef2a375faa14a"
+  },
+  "files": {
+    "guide/MANUAL.md": "8055a09ab3d483d17cc077381a0d592f83fbd58449fae52f287169beb186921e",
+    "guide/generated/claude/aih-guide.md": "5c285c1241a2f25183b4516f733532db47d3b95eb61fa9f04f80f04b8dc8c94d",
+    "guide/generated/kimi/aih-guide.md": "521703caa27e92b019b8fbc3716914364b939bc68d439213058303fe4584f499",
+    "guide/generated/opencode/aih-guide.md": "6ca81ce154b745561dcd9b0ebf5b88aeb545693d48196d0c80c95e8900db84a2",
+    "guide/compass.svg": "4701304fcce233002fdf732b8811f0022299222c8ca85fd0e9d9945102f46147"
+  }
+}

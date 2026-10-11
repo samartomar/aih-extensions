@@ -13,6 +13,8 @@
 | `.github/workflows/` | `tests.yml` on main pushes and pull requests (Windows and Linux); `upstream.yml` every 3 days | Yes |
 | `tests/`, `evals/` | Hook and installer tests; with-and-without evals | Yes |
 | `.claude-plugin/` | For the Claude Code plugin route and `claude plugin eval` | Yes |
+| `guide/source.md`, `guide/metadata.json`, `guide/compass.svg` | Original Guide source, identity and artwork | Yes |
+| `guide/MANUAL.md`, `guide/generated/`, `guide/manifest.json` | Guide outputs from `npm run guide`; separate from vendoring | No |
 
 ## Vendoring
 
@@ -42,6 +44,22 @@ An issue is updated, not duplicated, while upstream keeps moving. The same scrip
 ## Checks
 
 Before committing, run `npm run vendor`, `npm test` and `npm run validate`:
+
+For Guide changes, also run `npm run guide` and `npm run guide:check`.
+The builder uses one authored body for the offline manual and three native
+entries. `guide:check` rejects stale output and identity; the installer verifies
+manifest hashes before distributing the content. CI checks the output on both
+platforms. Keep all vendored agent paths explicitly listed in the Claude plugin
+manifest alongside the authored Guide path; the validator accepts Markdown file
+paths, not agent directories.
+
+Source identity is the most recent commit touching `guide/source.md`, metadata,
+artwork, the builder or `package.json`. Commit changed inputs first, regenerate,
+then commit only generated identity artifacts. The resulting clean manifest
+points at the source commit without a self-referencing commit cycle. Dirty
+outputs are labeled uncommitted and must be regenerated before release.
+Exact hashes establish content identity, not publisher authentication. Record
+native procedures and their limits in [Guide evidence](guide-evidence.md).
 
 - Vendoring reproduces the generated files and `vendor.lock.json` from the pinned upstreams. Review any resulting diff; include intended generated changes in the commit. CI regenerates them and rejects a diff against the committed files.
 - Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.

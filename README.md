@@ -23,6 +23,37 @@ Then:
 
 `node scripts/setup.mjs status` shows what is installed and from which commit. `--tools claude,codex` limits the install to the tools you name.
 
+## Ask AIH Guide 🧭
+
+Guidance for diagnosing and recovering AI CLI setup.
+
+Read or save the self-contained [manual](guide/MANUAL.md) before setup fails.
+Direct installation also saves it at `~/.aih-extensions/guide/MANUAL.md`.
+It carries the same recovery loop as the authored conversational agent, including
+offline/no-tool steps, scoped manual fixes, managed-setting handoff and honest
+verification. It reuses installed Core/Harness operations when applicable.
+
+Claude Code selects `claude --agent aih-guide`; Kimi Code selects
+`kimi --agent aih-guide` in a new session; OpenCode selects
+`opencode run --agent aih-guide`. The Claude plugin entry is
+`aih-extensions:aih-guide`. Confirm discovery on your installed version;
+[recorded evidence](docs/guide-evidence.md) distinguishes native selection from
+successful recovery. Codex and Cursor use the saved manual: explicitly ask the
+current agent to read it, or paste it into a working conversation. Each client
+targets its applicable Windows/macOS/Linux surfaces; installation alone does
+not establish native recovery across that matrix.
+
+The Guide follows the Extensions release version. Its
+[manifest](guide/manifest.json) records source commit and exact SHA-256 bytes;
+there is no separate Guide version. The compass SVG accompanies the manual;
+native icon rendering is not claimed. Optional Catalog delivery and a Core-doc
+pointer have separate release owners and are not claimed available here.
+
+Updates preserve a deliberate git-guard removal. `install --no-git-guard --yes`
+explicitly disables this guard while keeping the other Extensions hooks and
+personal configuration. Uninstall removes the Guide files it recorded and
+preserves unrelated content; unowned destination collisions stop installation.
+
 ## What's inside
 
 Running Matt's and Addy's collections side by side gives two skills each for interviews, specs, TDD, debugging, code review and ADRs. Both activate on the same prompts and disagree on formats: where ADRs go, how a review is laid out, when to refactor. This repo keeps Matt's set as he ships it and takes from Addy's only what Matt's set lacks.
