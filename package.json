@@ -1,6 +1,6 @@
 {
   "name": "aih-extensions",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "private": true,
   "type": "module",
   "description": "Specialist add-on for Matt Pocock's skills: Addy Osmani's security, performance, observability, CI, docs and launch skills, /ship with its reviewer agents, and a git guard, for Claude Code, Codex, Cursor, Kimi Code and opencode.",
@@ -12,7 +12,9 @@
     "status": "node scripts/setup.mjs status",
     "setup": "node scripts/setup.mjs install",
     "teardown": "node scripts/setup.mjs uninstall --all",
-    "clean": "node scripts/setup.mjs clean"
+    "clean": "node scripts/setup.mjs clean",
+    "guide": "node scripts/guide.mjs",
+    "guide:check": "node scripts/guide.mjs --check"
   },
   "license": "MIT"
 }
