@@ -6,7 +6,7 @@
   "version": "0.5.0",
   "source": {
     "repository": "https://github.com/samartomar/aih-extensions",
-    "commit": "8fe4e470e8851b774c3cf459b06a2d8fbafe036b",
+    "commit": "cd3e86e4f2929aad08450484a19217459761f13c",
     "dirty": true,
     "sha256": "604fe426d6e6edd6c92cc1c45a61cebf3b1c72a6f609cf25e44865e74b594a25"
   },
@@ -18,10 +18,10 @@
     "package.json": "7896a792e27961a1f9fcc71429543b52001b89480801949e600ef2a375faa14a"
   },
   "files": {
-    "guide/MANUAL.md": "8055a09ab3d483d17cc077381a0d592f83fbd58449fae52f287169beb186921e",
-    "guide/generated/claude/aih-guide.md": "5c285c1241a2f25183b4516f733532db47d3b95eb61fa9f04f80f04b8dc8c94d",
-    "guide/generated/kimi/aih-guide.md": "521703caa27e92b019b8fbc3716914364b939bc68d439213058303fe4584f499",
-    "guide/generated/opencode/aih-guide.md": "6ca81ce154b745561dcd9b0ebf5b88aeb545693d48196d0c80c95e8900db84a2",
+    "guide/MANUAL.md": "69a44f7fd7004ae73c2dbaf853abba8534a5b2f651087483f99ec770561a7c20",
+    "guide/generated/claude/aih-guide.md": "ac6f1c9563fa3069199455a517b94176cba6fdddf9d219bd4ca3347ac2c998d9",
+    "guide/generated/kimi/aih-guide.md": "4b76aa7b2154e40a3f22a279af94b09ba9683ee1d1474c9dfb7138528a6d76a7",
+    "guide/generated/opencode/aih-guide.md": "38f138c9584fd729bdf34644b514cf6e7d518d5b1e81dd4a9878bf5b430727f8",
     "guide/compass.svg": "4701304fcce233002fdf732b8811f0022299222c8ca85fd0e9d9945102f46147"
   }
 }

@@ -3,7 +3,7 @@
 
 Guidance for diagnosing and recovering AI CLI setup.
 
-Extensions 0.5.0 · source 8fe4e470e8851b774c3cf459b06a2d8fbafe036b (uncommitted source set)
+Extensions 0.5.0 · source cd3e86e4f2929aad08450484a19217459761f13c (uncommitted source set)
 Source-set SHA-256: `604fe426d6e6edd6c92cc1c45a61cebf3b1c72a6f609cf25e44865e74b594a25`. Exact file hashes: `manifest.json`.
 
 ## When setup fails
