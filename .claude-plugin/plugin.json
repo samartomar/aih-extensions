@@ -1,6 +1,6 @@
 {
   "name": "aih-extensions",
-  "version": "0.4.1",
+  "version": "0.5.0",
   "description": "Specialist add-on for Matt Pocock's skills: Addy Osmani's security, performance, observability, CI, docs and launch skills, /ship with its reviewer agents, and a git-guard hook.",
   "author": {
     "name": "Samarjeet Singh Tomar",
@@ -17,5 +17,12 @@
     "ship",
     "hooks",
     "mattpocock-skills"
+  ],
+  "agents": [
+    "./agents/code-reviewer.md",
+    "./agents/security-auditor.md",
+    "./agents/test-engineer.md",
+    "./agents/web-performance-auditor.md",
+    "./guide/generated/claude/aih-guide.md"
   ]
 }

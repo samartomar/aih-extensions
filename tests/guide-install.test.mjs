@@ -1,0 +1,110 @@
+import { test } from 'node:test';
+import assert from 'node:assert/strict';
+import fs from 'node:fs';
+import os from 'node:os';
+import path from 'node:path';
+import { fileURLToPath } from 'node:url';
+import { spawnSync } from 'node:child_process';
+
+const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
+test('direct install saves the offline guide, updates it, preserves a guard opt-out and removes only its own content', (t) => {
+  const dir = fs.mkdtempSync(path.join(os.tmpdir(), 'aihx-guide-'));
+  t.after(() => fs.rmSync(dir, { recursive: true, force: true }));
+  const home = path.join(dir, 'home');
+  const cache = path.join(dir, 'cache');
+  const matt = path.join(cache, 'matt');
+  fs.mkdirSync(path.join(matt, '.claude-plugin'), { recursive: true });
+  fs.writeFileSync(path.join(matt, '.claude-plugin', 'plugin.json'), '{"skills":[]}');
+  const git = (...args) => {
+    const r = spawnSync('git', args, { cwd: matt, encoding: 'utf8', windowsHide: true, timeout: 10000 });
+    assert.equal(r.status, 0, r.stderr);
+    return r.stdout.trim();
+  };
+  git('init', '-q');
+  git('remote', 'add', 'origin', 'https://github.com/mattpocock/skills.git');
+  git('add', '.');
+  git('-c', 'user.name=Fixture', '-c', 'user.email=fixture@example.invalid', 'commit', '-qm', 'fixture');
+  const sha = git('rev-parse', 'HEAD');
+  fs.mkdirSync(path.join(home, '.claude'), { recursive: true });
+  const settings = path.join(home, '.claude', 'settings.json');
+  const original = { hooks: { Stop: [{ hooks: [{ type: 'command', command: 'user-owned/git-guard.mjs' }] }] }, unrelated: 'keep' };
+  fs.writeFileSync(settings, JSON.stringify(original));
+  const env = { ...process.env, HOME: home, USERPROFILE: home, AIH_EXTENSIONS_HOME: path.join(home, '.aih-extensions'),
+    AIH_UPSTREAM_CACHE: cache, CLAUDE_CONFIG_DIR: path.join(home, '.claude'), CODEX_HOME: path.join(home, '.codex'),
+    KIMI_CODE_HOME: path.join(home, '.kimi-code'), XDG_CONFIG_HOME: path.join(home, '.config') };
+  const setup = (...args) => {
+    const r = spawnSync(process.execPath, ['scripts/setup.mjs', ...args], { cwd: root, env, encoding: 'utf8', windowsHide: true, timeout: 30000 });
+    assert.equal(r.status, 0, r.stderr + r.stdout);
+    return r.stdout;
+  };
+  const install = () => setup('install', '--tools', 'claude,codex,cursor,kimi,opencode', '--matt-ref', sha, '--yes');
+  install();
+  const manual = path.join(home, '.aih-extensions', 'guide', 'MANUAL.md');
+  assert.match(fs.readFileSync(manual, 'utf8'), /Ask AIH Guide/);
+  assert.ok(fs.existsSync(path.join(home, '.claude', 'agents', 'aih-guide.md')));
+  assert.match(fs.readFileSync(path.join(home, '.kimi-code', 'agents', 'aih-guide.md'), 'utf8'), /\$\{base_prompt\}/);
+  assert.match(fs.readFileSync(path.join(home, '.config', 'opencode', 'agents', 'aih-guide.md'), 'utf8'), /mode: primary/);
+  assert.ok(!fs.existsSync(path.join(home, '.codex', 'agents', 'aih-guide.toml')), 'subagent installation is not a direct conversation');
+  // The user disables only our git guard, retaining other Extensions and personal hooks.
+  const config = JSON.parse(fs.readFileSync(settings, 'utf8'));
+  config.hooks.PreToolUse = config.hooks.PreToolUse.filter(g => !g.hooks.some(h => h.command.includes('git-guard.mjs')));
+  fs.writeFileSync(settings, JSON.stringify(config));
+  const codexHooks = path.join(home, '.codex', 'hooks.json');
+  const codex = JSON.parse(fs.readFileSync(codexHooks, 'utf8'));
+  delete codex.hooks.PreToolUse;
+  fs.writeFileSync(codexHooks, JSON.stringify(codex));
+  const kimiConfig = path.join(home, '.kimi-code', 'config.toml');
+  fs.writeFileSync(kimiConfig, 'model = "personal-model"\n');
+  const ocPlugin = path.join(home, '.config', 'opencode', 'plugins', 'aih-extensions.js');
+  fs.writeFileSync(ocPlugin, `// aih-extensions: user keeps routing context\nconst extensionHooks=createPlugin(); export const AihExtensions=async context=>{const hooks=await extensionHooks(context); delete hooks['tool.execute.before']; return hooks;};\n`);
+  // Upgrade a legacy v2 install that claimed the entire private folder.
+  const installManifest = path.join(home, '.aih-extensions', 'manifest.json');
+  const oldManifest = JSON.parse(fs.readFileSync(installManifest, 'utf8'));
+  oldManifest.files = [...oldManifest.files, path.join(home, '.aih-extensions')];
+  fs.writeFileSync(installManifest, JSON.stringify(oldManifest));
+  const personal = path.join(home, '.aih-extensions', 'personal-note.txt');
+  fs.writeFileSync(personal, 'keep my note');
+  fs.writeFileSync(manual, 'obsolete installed copy');
+  install();
+  assert.match(fs.readFileSync(manual, 'utf8'), /Ask AIH Guide/);
+  assert.ok(!fs.readFileSync(settings, 'utf8').includes('.aih-extensions/hooks/git-guard.mjs'), 'update retains deliberate guard removal');
+  assert.ok(fs.readFileSync(settings, 'utf8').includes('skill-guard.mjs'));
+  const manifest = JSON.parse(fs.readFileSync(path.join(home, '.aih-extensions', 'manifest.json'), 'utf8'));
+  assert.equal(manifest.gitGuard.claude, false);
+  assert.equal(manifest.gitGuard.codex, false);
+  assert.equal(manifest.gitGuard.kimi, false);
+  assert.equal(manifest.gitGuard.opencode, false);
+  assert.ok(!fs.readFileSync(codexHooks, 'utf8').includes('git-guard.mjs'));
+  assert.equal(fs.readFileSync(kimiConfig, 'utf8'), 'model = "personal-model"\n');
+  assert.match(fs.readFileSync(ocPlugin, 'utf8'), /gitGuard: false/);
+  assert.equal(manifest.guide.version, JSON.parse(fs.readFileSync(path.join(root, 'package.json'))).version);
+  // Explicit opt-out applies on every adapter and keeps non-guard behavior.
+  setup('install', '--tools', 'claude,codex,cursor,kimi,opencode', '--matt-ref', sha, '--no-git-guard', '--yes');
+  assert.ok(!fs.readFileSync(settings, 'utf8').includes('.aih-extensions/hooks/git-guard.mjs'));
+  assert.ok(fs.readFileSync(settings, 'utf8').includes('lanes-card.mjs'));
+  assert.equal(fs.readFileSync(personal, 'utf8'), 'keep my note');
+  setup('uninstall', '--yes');
+  assert.ok(!fs.existsSync(manual));
+  assert.ok(!fs.existsSync(path.join(home, '.claude', 'agents', 'aih-guide.md')));
+  assert.deepEqual(JSON.parse(fs.readFileSync(settings, 'utf8')), original);
+  assert.equal(fs.readFileSync(personal, 'utf8'), 'keep my note');
+  // A name collision is stopped before hooks or user content change.
+  const collision = path.join(home, '.claude', 'agents', 'aih-guide.md');
+  fs.mkdirSync(path.dirname(collision), { recursive: true });
+  fs.writeFileSync(collision, 'personal guide');
+  const conflict = spawnSync(process.execPath, ['scripts/setup.mjs', 'install', '--tools', 'claude', '--matt-ref', sha, '--yes'], { cwd: root, env, encoding: 'utf8', windowsHide: true, timeout: 30000 });
+  assert.equal(conflict.status, 1);
+  assert.match(conflict.stderr, /already exist/);
+  assert.equal(fs.readFileSync(collision, 'utf8'), 'personal guide');
+  assert.deepEqual(JSON.parse(fs.readFileSync(settings, 'utf8')), original);
+  fs.unlinkSync(collision);
+  setup('install', '--tools', 'claude,kimi,opencode', '--matt-ref', sha, '--no-git-guard', '--yes');
+  fs.unlinkSync(installManifest);
+  const modified = path.join(home, '.kimi-code', 'agents', 'aih-guide.md');
+  fs.appendFileSync(modified, '\nPersonal annotation\n');
+  setup('uninstall', '--yes');
+  assert.ok(!fs.existsSync(manual), 'saved hash identity supports cleanup without install manifest');
+  assert.ok(!fs.existsSync(collision));
+  assert.match(fs.readFileSync(modified, 'utf8'), /Personal annotation/);
+  assert.equal(fs.readFileSync(personal, 'utf8'), 'keep my note');
+});

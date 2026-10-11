@@ -1,0 +1,10 @@
+{
+  "projectLabel": "disposable-project",
+  "integration": {
+    "enabled": false,
+    "mode": "local"
+  },
+  "unrelated": {
+    "keep": "owner-value"
+  }
+}

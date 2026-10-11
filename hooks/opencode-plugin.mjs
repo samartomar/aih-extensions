@@ -18,9 +18,10 @@ export function verdictFor(tool, args, { platform = process.platform, cwd = proc
   return `aih-extensions git-guard: ${v.reason}${v.decision === 'ask' ? ' opencode cannot pause to ask, so it is refused: ask the user to run it.' : ''}`;
 }
 
-export function createPlugin() {
+export function createPlugin({ gitGuard = true } = {}) {
   return async ({ directory } = {}) => ({
     'tool.execute.before': async (input, output) => {
+      if (!gitGuard) return;
       const reason = verdictFor(input?.tool, output?.args, { cwd: directory || process.cwd() });
       if (reason) throw new Error(reason);
     },

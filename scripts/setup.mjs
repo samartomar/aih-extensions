@@ -28,11 +28,13 @@ import os from 'node:os';
 import path from 'node:path';
 import { spawnSync, execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { createHash } from 'node:crypto';
 import { upstreams } from './upstream.config.mjs';
 import { checkoutPinned, resolveRef } from './git-cache.mjs';
 import { UPSTREAM_CACHE } from './paths.mjs';
+import { verifyGuide } from './guide.mjs';
 import {
-  TOOLS, fwd, toolDirs, isUserOnly, planFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy,
+  TOOLS, fwd, toolDirs, isUserOnly, planFor, guidePlanFor, hookEntries, addHooks, removeHooks, addOverrides, removeOverrides, tidy,
   kimiBlock, addTomlBlock, removeTomlBlock, addSkillDenies, removeSkillDenies, opencodePluginFile,
 } from './tools.mjs';
 
@@ -53,7 +55,7 @@ const OPENCODE_PLUGIN = path.join(DIRS.opencode, 'plugins', 'aih-extensions.js')
 const LEGACY = ['aih-extensions@aih-extensions', 'mattpocock-skills@claude-plugins-official'];
 const GATE_LINE = /^node \.githooks\/commit-gate\.mjs "\$1"\s*$/;
 // aihx-, not aih-: the AI Harness project (aih) fills the temp folder with aih-* dirs of its own.
-export const TEMP_PREFIXES = ['aihx-gate-', 'aihx-norepo-', 'aihx-measure-', 'aihx-cli-'];
+export const TEMP_PREFIXES = ['aihx-gate-', 'aihx-norepo-', 'aihx-measure-', 'aihx-cli-', 'aihx-guide-'];
 // A personal `code-review` (Matt's) replaces Claude's built-in one by name, so only
 // the built-in `simplify` needs hiding: the add-on's code-simplification owns that job.
 const OVERRIDES = ['simplify'];
@@ -179,7 +181,10 @@ function removeConfigEdits(m) {
 
 function removeInstalled(m) {
   if (m.mode === 'marketplace') removeLegacyPlugins();
-  for (const p of m.files ?? []) if (fs.existsSync(p)) step(`delete ${p}`, () => fs.rmSync(p, { recursive: true, force: true }));
+  // Older manifests owned the whole private folder. Narrow that legacy claim so
+  // upgrades never recursively erase personal files saved alongside our data.
+  const files = (m.files ?? []).flatMap(p => path.resolve(p).toLowerCase() === path.resolve(OWN_DIR).toLowerCase() ? [HOOKS_DIR, MANIFEST] : [p]);
+  for (const p of files) if (fs.existsSync(p)) step(`delete ${p}`, () => fs.rmSync(p, { recursive: true, force: true }));
   removeConfigEdits(m);
   for (const f of m.createdFiles ?? []) {
     if (yes ? fs.existsSync(f) && /^\s*(\{\s*\})?\s*$/.test(readText(f)) : fs.existsSync(f)) step(`delete ${f} if it is left empty (install created it)`, () => { if (/^\s*(\{\s*\})?\s*$/.test(readText(f))) fs.rmSync(f); });
@@ -279,9 +284,25 @@ function installDirect() {
 
   const previous = readJson(MANIFEST, null);
   const sources = gatherSources(mattDir, addonDir);
+  const guide = verifyGuide(addonDir);
+  // Read deliberate removals before uninstalling the old hooks. Cursor shares Claude.
+  const guardPresent = (tool) => {
+    if (tool === 'kimi') {
+      const text = readText(CONFIG.kimi);
+      return removeTomlBlock(text).removed && text.split('\n').some(line => line.includes(MARKER) && line.includes('git-guard.mjs'));
+    }
+    if (tool === 'opencode') {
+      const text = readText(OPENCODE_PLUGIN);
+      return fs.existsSync(OPENCODE_PLUGIN) && !/gitGuard\s*:\s*false|delete\s+hooks\s*\[\s*['"]tool\.execute\.before['"]\s*\]/.test(text);
+    }
+    return Object.values(readJson(CONFIG[tool], {}).hooks ?? {}).some(groups => groups.some(group => group.hooks?.some(hook => typeof hook.command === 'string' && hook.command.includes(MARKER) && hook.command.includes('git-guard.mjs'))));
+  };
+  const gitGuard = Object.fromEntries(tools.filter(t => t !== 'cursor').map(t => [t,
+    !argv.includes('--no-git-guard') && (previous?.tools?.includes(t) ? previous.gitGuard?.[t] !== false && guardPresent(t) : true)]));
   const ocCommands = fs.existsSync(path.join(DIRS.opencode, 'command')) && !fs.existsSync(path.join(DIRS.opencode, 'commands')) ? 'command' : 'commands';
   const plan = planFor(tools, DIRS, sources, { opencodeCommandDir: ocCommands });
-  if (tools.includes('opencode')) plan.push({ tool: 'opencode', dest: OPENCODE_PLUGIN, content: opencodePluginFile(HOOKS_DIR) });
+  plan.push(...guidePlanFor(tools, DIRS, addonDir, OWN_DIR));
+  if (tools.includes('opencode')) plan.push({ tool: 'opencode', dest: OPENCODE_PLUGIN, content: opencodePluginFile(HOOKS_DIR, { gitGuard: gitGuard.opencode }) });
   const clash = conflicts(plan, fs.existsSync, previous?.files ?? []);
   if (clash.length) {
     console.error(`Stopped: these already exist and were not installed by aih-extensions:\n  ${clash.join('\n  ')}\nRename or remove them, then run install again.`);
@@ -298,7 +319,7 @@ function installDirect() {
   const roots = [...new Set([OWN_DIR, ...plan.map((c) => path.dirname(c.dest))])];
   const createdDirs = roots.filter((d) => !fs.existsSync(d) || previous?.createdDirs?.includes(d));
   const createdFiles = [CONFIG.codex, CONFIG.kimi, CONFIG.opencode].filter((f, i) => tools.includes(['codex', 'kimi', 'opencode'][i]) && (!fs.existsSync(f) || previous?.createdFiles?.includes(f)));
-  for (const tool of tools) {
+  for (const tool of [...tools, 'guide']) {
     const ops = plan.filter((c) => c.tool === tool);
     if (!ops.length) { say(`   ${tool}: nothing to copy (${tool === 'cursor' ? 'loads the Claude Code folders' : 'uses the Claude Code skills folder'})`); continue; }
     step(`${tool}: ${ops.filter((c) => c.src).length} copies and ${ops.filter((c) => c.content).length} generated files under ${DIRS[tool]}`, () => {
@@ -315,12 +336,12 @@ function installDirect() {
   if (tools.includes('claude')) {
     overrides = addOverrides(readJson(CONFIG.claude, {}), OVERRIDES).added;
     step(`claude: add 3 hooks (git-guard, skill-guard, lanes-card) and skillOverrides [${overrides.join(', ')}] to ${CONFIG.claude}`, () =>
-      writeJson(CONFIG.claude, addOverrides(addHooks(readJson(CONFIG.claude, {}), hookEntries('claude', HOOKS_DIR)), OVERRIDES).next));
+      writeJson(CONFIG.claude, addOverrides(addHooks(readJson(CONFIG.claude, {}), hookEntries('claude', HOOKS_DIR).filter(e => gitGuard.claude || !e.command.includes('git-guard.mjs'))), OVERRIDES).next));
   }
   if (tools.includes('codex')) {
-    step(`codex: add 2 hooks (git-guard, lanes-card) to ${CONFIG.codex}`, () => writeJson(CONFIG.codex, addHooks(readJson(CONFIG.codex, {}), hookEntries('codex', HOOKS_DIR))));
+    step(`codex: add selected hooks to ${CONFIG.codex}`, () => writeJson(CONFIG.codex, addHooks(readJson(CONFIG.codex, {}), hookEntries('codex', HOOKS_DIR).filter(e => gitGuard.codex || !e.command.includes('git-guard.mjs')))));
   }
-  if (tools.includes('kimi')) {
+  if (tools.includes('kimi') && gitGuard.kimi) {
     step(`kimi: add a [[hooks]] block (git-guard) to ${CONFIG.kimi}`, () => writeWithBackup(CONFIG.kimi, addTomlBlock(readText(CONFIG.kimi), kimiBlock(HOOKS_DIR))));
   }
   if (tools.includes('opencode')) {
@@ -332,10 +353,12 @@ function installDirect() {
     installedAt: new Date().toISOString(),
     matt: { repo: upstreams.matt.repo, sha: mattSha },
     addon,
+    guide: { version: guide.version, source: guide.source, manual: path.join(OWN_DIR, 'guide', 'MANUAL.md') },
+    gitGuard,
     tools,
     counts: { matt: sources.skills.filter((s) => s.from === 'matt').length, addon: sources.skills.filter((s) => s.from === 'addon').length },
     items: plan.map((c) => ({ tool: c.tool, dest: c.dest })),
-    files: [...plan.map((c) => c.dest), OWN_DIR],
+    files: [...plan.map((c) => c.dest), HOOKS_DIR, MANIFEST],
     overrides: [...new Set([...(previous?.overrides ?? []), ...overrides])],
     skillDenies: [...new Set([...(previous?.skillDenies ?? []), ...(denies?.added ?? [])])],
     createdDirs,
@@ -343,6 +366,7 @@ function installDirect() {
   }, null, 2) + '\n'));
 
   say('\nStart a new session in each tool to load the skills and hooks.');
+  say(`Ask AIH Guide manual: ${path.join(OWN_DIR, 'guide', 'MANUAL.md')} (Codex/Cursor fallback).`);
   if (tools.includes('codex')) say('Codex runs new hooks only after you trust them: open `codex` once and accept them (or review with /hooks).');
   if (tools.includes('cursor')) say(`Cursor loads ~/.claude through its third-party import: ${cursorThirdParty()}.`);
   say('Per repo: /setup-matt-pocock-skills, then /install-commit-gate.');
@@ -351,10 +375,29 @@ function installDirect() {
 function uninstall() {
   const m = readJson(MANIFEST, null);
   if (m) removeInstalled(m);
-  else { say('   no install recorded (no manifest); removing anything found by marker'); removeConfigEdits(null); }
+  else { say('   no install recorded (no manifest); removing anything found by marker'); removeConfigEdits(null); removeSavedGuide(); }
   removeLegacyPlugins();
   if (argv.includes('--all')) clean();
   say('Repos with the commit gate keep it until you run: node scripts/setup.mjs remove-gate <repo>');
+}
+
+// A saved Guide identity allows conservative cleanup after the install manifest
+// is lost. Modified or unrelated files are retained, never guessed to be ours.
+function removeSavedGuide() {
+  const plan = guidePlanFor(TOOLS, DIRS, ROOT, OWN_DIR);
+  const saved = plan.find(entry => entry.guideFile === 'guide/manifest.json').dest;
+  const identity = readJson(saved, null);
+  if (identity?.id !== 'aih-guide' || !identity.files) return;
+  for (const { dest: file, guideFile } of plan.filter(entry => entry.dest !== saved)) {
+    const expected = identity.files[guideFile];
+    if (!fs.existsSync(file)) continue;
+    const actual = createHash('sha256').update(fs.readFileSync(file)).digest('hex');
+    if (actual === expected) step(`delete identified Guide file ${file}`, () => fs.rmSync(file));
+    else say(`   keeping modified Guide destination ${file}`);
+  }
+  step(`delete saved Guide identity ${saved}`, () => fs.rmSync(saved));
+  const dir = path.dirname(saved);
+  if (yes && fs.existsSync(dir) && !fs.readdirSync(dir).length) fs.rmdirSync(dir);
 }
 
 function removeGate() {

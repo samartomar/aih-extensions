@@ -67,6 +67,21 @@ export function codexAgent(text) {
 
 // ---------- what goes where ----------
 
+// Authored Guide entries are primary-conversation formats, separate from the
+// vendored reviewer conversions below. Codex/Cursor use the shared manual.
+// guideFile is the release-manifest hash key, also used for conservative cleanup.
+export function guidePlanFor(tools, dirs, addonDir, ownDir) {
+  const entries = tools.filter(tool => ['claude', 'kimi', 'opencode'].includes(tool)).map(tool => ({
+    tool,
+    dest: path.join(dirs[tool], 'agents', 'aih-guide.md'),
+    guideFile: `guide/generated/${tool}/aih-guide.md`,
+  }));
+  for (const file of ['MANUAL.md', 'manifest.json', 'compass.svg']) entries.push({
+    tool: 'guide', dest: path.join(ownDir, 'guide', file), guideFile: `guide/${file}`,
+  });
+  return entries.map(entry => ({ ...entry, src: path.join(addonDir, ...entry.guideFile.split('/')) }));
+}
+
 // sources: { skills: [{ name, src }], references: [{ name, src }], agents: [{ name, src, text }], commands: [{ name, src }] }
 // Returns operations: { tool, dest, src } to copy, or { tool, dest, content } to write.
 export function planFor(tools, dirs, sources, { opencodeCommandDir = 'command' } = {}) {
@@ -227,12 +242,12 @@ export function removeSkillDenies(config, names) {
 
 // The file opencode auto-loads from ~/.config/opencode/plugins. Every export must
 // be a function, or opencode drops the whole plugin with only a log line.
-export function opencodePluginFile(hooksDir) {
+export function opencodePluginFile(hooksDir, { gitGuard = true } = {}) {
   const url = `file:///${fwd(path.join(hooksDir, 'opencode-plugin.mjs')).replace(/^\/+/, '')}`;
   return [
     '// aih-extensions: added by its scripts/setup.mjs, removed by `uninstall`.',
     `import { createPlugin } from ${JSON.stringify(url)};`,
-    'export const AihExtensions = createPlugin();',
+    `export const AihExtensions = createPlugin(${gitGuard ? '' : '{ gitGuard: false }'});`,
     '',
   ].join('\n');
 }

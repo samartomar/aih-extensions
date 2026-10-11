@@ -43,3 +43,13 @@ test('opencode plugin: same policy, refuses a push it cannot ask about, ignores 
   assert.equal(out.system.length, 2);
   assert.match(out.system[1], /ask-matt/);
 });
+
+test('opencode opt-out preserves routing context without enforcing the git guard', async () => {
+  const { createPlugin } = await import('../hooks/opencode-plugin.mjs');
+  const hooks = await createPlugin({ gitGuard: false })({});
+  await hooks['tool.execute.before']({ tool: 'bash' }, { args: { command: 'git reset --hard' } });
+  const out = { system: [] };
+  await hooks['experimental.chat.system.transform']({}, out);
+  assert.equal(out.system.length, 1);
+  assert.match(out.system[0], /ask-matt/);
+});
