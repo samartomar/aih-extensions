@@ -109,6 +109,45 @@ connectivity/trust repair. Those branches remain guidance with installed-contrac
 checks and must not inherit this fixture's pass. No with-and-without effectiveness
 or context-cost claim is made.
 
+## Nuclei guidance integration
+
+[Extensions #10](https://github.com/samartomar/aih-extensions/issues/10) adds
+guidance to the authored body and broadens its discovery description for
+Extensions **0.6.0**. The manual and three native entries remain renders of that
+same body. The reviewed public consumer contract is Catalog source
+`955754624f968b3823edddd2dcf1c9bacf33ccf4`: packaged
+`workflows/nuclei/AUTHORING.md`, the three author exports and helper manifest.
+The preparation manifest's per-file identity fields were checked against
+`workflows/nuclei/bundle.go`. These are source observations, not a claim of
+published Catalog or Extensions availability.
+
+An isolated author-only check imported that exact Catalog `author.mjs` from Git
+and selected each Linux/Windows x64 helper from its exact manifest. For both
+platform options it authored preparation, assessment and reconciliation policies,
+checked separate `prepare`/`run`/`reconcile` operations, exact helper pins and
+bundle digest/length, accepted exit codes, and matching run/daemon/CLI/container/
+network reconciliation identities. It also checked refusal of credential-bearing
+targets, hosts outside the reviewed allowlist, mutable image tags and invalid
+bundle digests. Only author functions ran: no helper, downloader, Docker, target,
+provider or credential access occurred. The scratch checker was removed.
+
+`npm run guide`, `npm run guide:check`, the focused Guide build/install tests
+(2 passing tests) and `git diff --check` passed on the development render.
+Fixture Git commits used a process-only signing override; machine Git settings
+were preserved. Full repository validation passed: pinned vendor reproduction
+(no vendored diff), all 139 tests, both strict plugin manifests, Guide freshness
+and whitespace checks. Authored inputs are committed before final identity
+regeneration; the integrated manifest identifies the clean source commit.
+
+No fresh native Guide conversation or model-effectiveness measurement was run for
+this added branch. The earlier native table and offline-manual observations above
+retain their original scope and identities. Catalog's bounded synthetic HTTP
+Linux/Windows findings, zero findings and cancellation/reconciliation evidence
+does not establish Guide behavior, a user's Docker setup, TLS, macOS, ARM or WSL
+support. The new text preserves Catalog's narrow zero-finding SARIF omission rule,
+retained reports, explicit reconciliation, and the limits of cancellation and
+bridge networking. No new execution helper or lifecycle owner is delivered here.
+
 ## Remaining delivery
 
 The canonical Markdown becomes directly readable from merged public source and
@@ -117,5 +156,5 @@ saved copy; a web link alone does not establish an offline copy for other users.
 Core's documentation pointer remains a separately tracked owning-channel task.
 [Catalog distribution #64](https://github.com/samartomar/aih-catalog/issues/64)
 remains unstarted. The maintainer owns any later Extensions release/marketplace
-publication; version 0.5.0 here is the source artifact identity, not proof of
+publication; version 0.6.0 here is the source artifact identity, not proof of
 published availability. This does not complete the four-channel rollout.
