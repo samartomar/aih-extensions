@@ -9,7 +9,7 @@
 export const upstreams = {
   addy: {
     repo: 'https://github.com/addyosmani/agent-skills.git',
-    sha: '1be8e34187e34647bb83adc3a1323b26ae6f6abe',
+    sha: 'aeac41d4d005999432bb7312f7ff06383a91d59d',
   },
   matt: {
     repo: 'https://github.com/mattpocock/skills.git',
@@ -175,9 +175,14 @@ export const patches = [
     replace: 'description: "Senior code reviewer for the /ship pre-launch fan-out: evaluates a production-bound change across correctness, readability, architecture, security and performance. Everyday pre-merge review belongs to the code-review skill."',
   },
   { file: 'agents/code-reviewer.md', find: 'using the same severity labels as the `code-review-and-quality` skill:', replace: 'using these severity labels:' },
-  { file: 'agents/code-reviewer.md', find: '- **Invoke via:** `/review` (single-perspective review) or `/ship`', replace: '- **Invoke via:** `/ship`' },
-  { file: 'agents/test-engineer.md', find: '- **Invoke via:** `/test` (TDD workflow) or `/ship`', replace: '- **Invoke via:** direct agent invocation or `/ship`' },
+  { file: 'agents/code-reviewer.md', find: '`/review` runs the `code-review-and-quality` skill in the main session and does not spawn this persona.', replace: 'Everyday pre-merge review belongs to the `code-review` skill; this persona serves the `/ship` pre-launch fan-out.' },
+  { file: 'agents/test-engineer.md', find: '`/test` runs the `test-driven-development` skill in the main session and does not spawn this persona.', replace: 'The `tdd` skill handles the TDD workflow in the main session and does not spawn this persona.' },
   { file: 'commands/ship.md', find: 'Invoke the agent-skills:shipping-and-launch skill.', replace: 'Invoke the shipping-and-launch skill.' },
+  {
+    file: 'skills/idea-refine/SKILL.md',
+    find: '- Not for: a user who is unsure what they want at all (use `interview-me`), or a direction already chosen that needs a spec (use `spec-driven-development`)',
+    replace: '- Not for: a user who is unsure what they want at all (use `grilling`), or a direction already chosen that needs a spec (use `/to-spec`)',
+  },
 
   // --- Shared checklists.
   {
