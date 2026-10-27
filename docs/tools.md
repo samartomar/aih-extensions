@@ -70,6 +70,36 @@ After install and uninstall, `settings.json`, `~/.codex/hooks.json`, `~/.kimi-co
 - Codex ignores `disable-model-invocation` and reads `agents/openai.yaml`, which the vendor script writes for every typed-only skill here and Matt ships for his.
 - Custom prompts are gone from Codex, so `/ship` and `/webperf` aren't installed there; the `shipping-and-launch` skill is.
 
+#### Codex skill selection and qualification
+
+The direct installer accepts `--codex-skills <name,...>` to select shipped skill
+folder names for Codex. Other selected clients keep their complete skill plan.
+Omitting the option retains all shipped Codex skills. The preview shows each
+selected skill's Matt/add-on attribution, source and single destination; the
+payload is copied unchanged. References, agents, Guide and hooks follow the
+existing plan independently of skill selection. Reinstall replaces the previous
+direct installation, so repeat the intended tools and selection when updating.
+
+`--codex-skill-location codex` explicitly selects the current location, honoring
+`CODEX_HOME`. `--codex-skill-location shared` is refused before source acquisition
+or destination changes. There is no shared-path enablement switch or evidence-file
+bypass. A Codex skills directory resolving into the shared skills location is
+also refused, including a symlink alias. A same-name entry in
+`~/.agents/skills` stops both preview and installation; the installer leaves that
+copy with its existing owner. An unowned current-location destination also stops
+installation. Removal uses the existing installation manifest and leaves other
+clients' unowned skill copies alone.
+
+Disposable installer fixtures establish selected preview, unchanged file
+delivery, duplicate/collision refusal, retained guard opt-out and owned removal.
+They do **not** establish native skill discovery, precedence, loading or use.
+The September observation above remains historical. No new Codex version or
+platform is qualified by these fixtures, and shared delivery stays disabled.
+Changing that rule requires exact client/version/platform and configuration
+evidence for location, precedence and single loading in a separately authorized
+throwaway repository. Hook trust and allow/block behavior require their own
+observations; file delivery never enables a deliberately disabled guard.
+
 ### Kimi Code
 
 - Kimi Code reads hooks only from `~/.kimi-code/config.toml` and acts only on "deny", so the guard runs with `--no-ask`.
