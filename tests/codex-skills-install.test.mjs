@@ -54,7 +54,7 @@ test('Codex selected skill preview, delivery, update and removal keep other clie
   const manifest = JSON.parse(fs.readFileSync(path.join(f.env.AIH_EXTENSIONS_HOME, 'manifest.json')));
   assert.equal(manifest.gitGuard.codex, false);
   assert.ok(!fs.readFileSync(path.join(f.env.CODEX_HOME, 'hooks.json'), 'utf8').includes('git-guard.mjs'));
-  const removed = f.setup('uninstall', '--all', '--yes');
+  const removed = f.setup('uninstall', '--yes');
   assert.equal(removed.status, 0, removed.stderr);
   assert.ok(!fs.existsSync(dest));
   assert.equal(fs.readFileSync(other, 'utf8'), 'Other client owns this source');
@@ -111,7 +111,7 @@ test('a shared collision on update preserves the owned installation and hooks', 
   assert.equal(update.status, 1, update.stderr);
   assert.deepEqual(fs.readFileSync(installed), before);
   assert.deepEqual(fs.readFileSync(hooks), hooksBefore);
-  assert.equal(f.setup('uninstall', '--all', '--yes').status, 0);
+  assert.equal(f.setup('uninstall', '--yes').status, 0);
   assert.equal(fs.readFileSync(shared, 'utf8'), 'Shared source remains outside installer ownership');
 });
 
@@ -124,7 +124,7 @@ test('addon selection retains payload attribution and shared symlink aliases sta
   assert.match(preview.stdout, /codex skill install-commit-gate \(addon\)/);
   assert.equal(f.setup(...args, '--yes').status, 0);
   assert.equal(fs.readFileSync(path.join(f.env.CODEX_HOME, 'skills', 'install-commit-gate', 'SKILL.md'), 'utf8'), fs.readFileSync(path.join(root, 'skills', 'install-commit-gate', 'SKILL.md'), 'utf8'));
-  assert.equal(f.setup('uninstall', '--all', '--yes').status, 0);
+  assert.equal(f.setup('uninstall', '--yes').status, 0);
   const sharedRoot = path.join(f.home, '.agents', 'skills');
   fs.mkdirSync(sharedRoot, { recursive: true });
   fs.mkdirSync(f.env.CODEX_HOME, { recursive: true });
