@@ -84,10 +84,13 @@ export function guidePlanFor(tools, dirs, addonDir, ownDir) {
 
 // sources: { skills: [{ name, src }], references: [{ name, src }], agents: [{ name, src, text }], commands: [{ name, src }] }
 // Returns operations: { tool, dest, src } to copy, or { tool, dest, content } to write.
-export function planFor(tools, dirs, sources, { opencodeCommandDir = 'command' } = {}) {
+export function planFor(tools, dirs, sources, { opencodeCommandDir = 'command', codexSkills } = {}) {
   const ops = [];
   const skillsAndRefs = (tool, root) => {
-    for (const s of sources.skills) ops.push({ tool, dest: path.join(root, 'skills', s.name), src: s.src });
+    for (const s of sources.skills) {
+      if (tool === 'codex' && codexSkills && !codexSkills.includes(s.name)) continue;
+      ops.push({ tool, dest: path.join(root, 'skills', s.name), src: s.src });
+    }
     for (const r of sources.references) ops.push({ tool, dest: path.join(root, 'references', r.name), src: r.src });
   };
   for (const tool of tools) {

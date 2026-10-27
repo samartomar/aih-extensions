@@ -15,6 +15,7 @@
 //   node scripts/setup.mjs status
 //   node scripts/setup.mjs install    [--tools claude,codex,cursor,kimi,opencode] [--matt-ref <sha|branch>]
 //                                     [--addon-repo <git url> [--addon-ref <ref>]] [--yes]
+//                                     [--codex-skills <name,...>] [--codex-skill-location codex]
 //   node scripts/setup.mjs install --marketplace [--yes]  Claude Code only
 //   node scripts/setup.mjs uninstall  [--all] [--yes]     also removes marketplace-installed copies of either
 //   node scripts/setup.mjs remove-gate <repo> [--yes]     take the commit gate out of one repo
@@ -117,6 +118,18 @@ function installedPlugins() {
 }
 const tempLeftovers = () => fs.readdirSync(os.tmpdir()).filter((n) => TEMP_PREFIXES.some((p) => n.startsWith(p))).map((n) => path.join(os.tmpdir(), n));
 const detectTools = () => TOOLS.filter((t) => fs.existsSync(DIRS[t]));
+
+// Resolve existing ancestors too: CODEX_HOME or its skills folder can be a
+// symlink even when the selected skill destination does not exist yet.
+function resolvedDestination(file) {
+  if (fs.existsSync(file)) return fs.realpathSync(file);
+  const parent = path.dirname(file);
+  return parent === file ? file : path.join(resolvedDestination(parent), path.basename(file));
+}
+const containsPath = (root, file) => {
+  const relative = path.relative(root, file);
+  return !relative || (!relative.startsWith(`..${path.sep}`) && relative !== '..' && !path.isAbsolute(relative));
+};
 
 // Everything each tool can load: Matt's promoted skills (his plugin.json list) and
 // the add-on's skills, references, agents and commands.
@@ -234,6 +247,16 @@ function status() {
 }
 
 function install() {
+  for (const name of ['--codex-skills', '--codex-skill-location']) {
+    if (argv.includes(name) && (!opt(name) || opt(name).startsWith('--') || argv.includes('--marketplace'))) {
+      console.error(`${name} requires a value and the direct Codex route.`);
+      process.exit(2);
+    }
+  }
+  if (opt('--codex-skill-location') && opt('--codex-skill-location') !== 'codex') {
+    console.error('Shared Codex skill delivery is disabled pending native location/precedence qualification; only --codex-skill-location codex is enabled.');
+    process.exit(2);
+  }
   return argv.includes('--marketplace') ? installMarketplace() : installDirect();
 }
 
@@ -265,6 +288,18 @@ function installDirect() {
   let tools;
   try { tools = selectTools(opt('--tools')?.split(',').map((t) => t.trim()).filter(Boolean), detectTools()); } catch (e) { console.error(e.message); process.exit(2); }
   if (!tools.length) { console.error(`No supported tool found (looked for ${TOOLS.map((t) => DIRS[t]).join(', ')}). Pass --tools.`); process.exit(1); }
+  if (!tools.includes('codex') && (argv.includes('--codex-skills') || argv.includes('--codex-skill-location'))) {
+    console.error('Codex skill options require codex in the selected tools.');
+    process.exit(2);
+  }
+  if (tools.includes('codex')) {
+    const codex = resolvedDestination(path.join(DIRS.codex, 'skills'));
+    const shared = resolvedDestination(path.join(HOME, '.agents', 'skills'));
+    if (containsPath(shared, codex) || containsPath(codex, shared)) {
+      console.error('Stopped: CODEX_HOME resolves to the disabled shared skill location. Native location/precedence qualification is required.');
+      process.exit(2);
+    }
+  }
 
   // Sources: Matt from GitHub at the tested pin (or --matt-ref); the add-on from this folder or --addon-repo.
   const mattSha = opt('--matt-ref') ? resolveRef(upstreams.matt.repo, opt('--matt-ref')) : upstreams.matt.sha;
@@ -284,6 +319,10 @@ function installDirect() {
 
   const previous = readJson(MANIFEST, null);
   const sources = gatherSources(mattDir, addonDir);
+  const codexSkills = opt('--codex-skills')?.split(',').map(name => name.trim()).filter(Boolean);
+  if (codexSkills && (!codexSkills.length || codexSkills.some(name => !sources.skills.some(skill => skill.name === name)))) {
+    throw new Error('Unknown or empty --codex-skills selection; use shipped skill folder names.');
+  }
   const guide = verifyGuide(addonDir);
   // Read deliberate removals before uninstalling the old hooks. Cursor shares Claude.
   const guardPresent = (tool) => {
@@ -300,7 +339,18 @@ function installDirect() {
   const gitGuard = Object.fromEntries(tools.filter(t => t !== 'cursor').map(t => [t,
     !argv.includes('--no-git-guard') && (previous?.tools?.includes(t) ? previous.gitGuard?.[t] !== false && guardPresent(t) : true)]));
   const ocCommands = fs.existsSync(path.join(DIRS.opencode, 'command')) && !fs.existsSync(path.join(DIRS.opencode, 'commands')) ? 'command' : 'commands';
-  const plan = planFor(tools, DIRS, sources, { opencodeCommandDir: ocCommands });
+  const plan = planFor(tools, DIRS, sources, { opencodeCommandDir: ocCommands, codexSkills });
+  if (tools.includes('codex')) {
+    say('Codex skill preference: current codex location; shared delivery disabled pending native location/precedence qualification.');
+    for (const skill of sources.skills.filter(skill => !codexSkills || codexSkills.includes(skill.name))) {
+      say(`   codex skill ${skill.name} (${skill.from}): ${skill.src} -> ${path.join(DIRS.codex, 'skills', skill.name)}`);
+      const shared = path.join(HOME, '.agents', 'skills', skill.name);
+      if (fs.existsSync(shared) || fs.lstatSync(shared, { throwIfNoEntry: false })) {
+        console.error(`Stopped: shared skill collision at ${shared}. Native precedence is unqualified; keep the other client's source and resolve the selection explicitly.`);
+        process.exit(1);
+      }
+    }
+  }
   plan.push(...guidePlanFor(tools, DIRS, addonDir, OWN_DIR));
   if (tools.includes('opencode')) plan.push({ tool: 'opencode', dest: OPENCODE_PLUGIN, content: opencodePluginFile(HOOKS_DIR, { gitGuard: gitGuard.opencode }) });
   const clash = conflicts(plan, fs.existsSync, previous?.files ?? []);

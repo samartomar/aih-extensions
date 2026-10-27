@@ -23,6 +23,16 @@ Then:
 
 `node scripts/setup.mjs status` shows what is installed and from which commit. `--tools claude,codex` limits the install to the tools you name.
 
+For a bounded Codex file-delivery check, `install --tools codex --codex-skills
+ask-sam` selects one shipped skill folder name; comma-separated names select a
+subset. The preview identifies each selected source and destination. This still
+installs Codex's references, agents, Guide and selected hooks. Updates replace
+the previous direct installation with the newly selected plan.
+Codex retains its current `~/.codex/skills` location (or `CODEX_HOME/skills`).
+Shared delivery remains disabled pending native location/precedence qualification;
+an existing same-name skill in `~/.agents/skills` stops installation without
+claiming or removing that source. See [the qualification boundary](docs/tools.md#codex-skill-selection-and-qualification).
+
 ## Ask AIH Guide 🧭
 
 Guidance for diagnosing and recovering AI CLI setup.
