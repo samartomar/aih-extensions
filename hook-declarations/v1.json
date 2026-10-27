@@ -1,0 +1,376 @@
+{
+  "schemaVersion": 1,
+  "hooks": [
+    {
+      "id": "git-guard.claude",
+      "source": {
+        "protocol": "claude-command-hook",
+        "event": "PreToolUse",
+        "matcher": "Bash|PowerShell"
+      },
+      "script": "hooks/git-guard.mjs",
+      "materials": [
+        {
+          "path": "hooks/git-guard.mjs",
+          "sha256": "45221ff594aa1126e8920118245dbfa8434505781bff2b51f32bc74c194edd87"
+        },
+        {
+          "path": "hooks/lib/git-policy.mjs",
+          "sha256": "3fd71cf280325a043a49286c19690abd5654e3aedea4dbd7a4844e126845e1fd"
+        },
+        {
+          "path": "hooks/lib/shell.mjs",
+          "sha256": "f1c55be104f5ca34fc06106562e7af7749097bf9272ab78a65a822ca54e57b21"
+        },
+        {
+          "path": "hooks/lib/git-context.mjs",
+          "sha256": "84685636feeb256c730bec291232cd43a29151f218f85e46e8ce6a9108ad3a81"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/git-guard.mjs",
+        "arguments": []
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "hooks/hooks.json#/hooks/PreToolUse/0",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "skill-guard.claude",
+      "source": {
+        "protocol": "claude-command-hook",
+        "event": "PreToolUse",
+        "matcher": "Skill"
+      },
+      "script": "hooks/skill-guard.mjs",
+      "materials": [
+        {
+          "path": "hooks/skill-guard.mjs",
+          "sha256": "8e23104bfdf811244ed3a613a7267fd80ab82ddffcd400ce712737644c3016f6"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/skill-guard.mjs",
+        "arguments": []
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "hooks/hooks.json#/hooks/PreToolUse/1",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "lanes-card.claude",
+      "source": {
+        "protocol": "claude-command-hook",
+        "event": "SessionStart",
+        "matcher": "startup|clear|compact"
+      },
+      "script": "hooks/lanes-card.mjs",
+      "materials": [
+        {
+          "path": "hooks/lanes-card.mjs",
+          "sha256": "c0380c27c0c613f788ba74fe13eb0bbc604942fce6e4d406c7a783bffbddd209"
+        },
+        {
+          "path": "hooks/lanes.md",
+          "sha256": "e8f625b942abe8fe7b883bf1000650b8b056b76c458ea1bb793e2af602a5f875"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/lanes-card.mjs",
+        "arguments": []
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "hooks/hooks.json#/hooks/SessionStart/0",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "git-guard.codex",
+      "source": {
+        "protocol": "codex-command-hook",
+        "event": "PreToolUse",
+        "matcher": "^Bash$"
+      },
+      "script": "hooks/git-guard.mjs",
+      "materials": [
+        {
+          "path": "hooks/git-guard.mjs",
+          "sha256": "45221ff594aa1126e8920118245dbfa8434505781bff2b51f32bc74c194edd87"
+        },
+        {
+          "path": "hooks/lib/git-policy.mjs",
+          "sha256": "3fd71cf280325a043a49286c19690abd5654e3aedea4dbd7a4844e126845e1fd"
+        },
+        {
+          "path": "hooks/lib/shell.mjs",
+          "sha256": "f1c55be104f5ca34fc06106562e7af7749097bf9272ab78a65a822ca54e57b21"
+        },
+        {
+          "path": "hooks/lib/git-context.mjs",
+          "sha256": "84685636feeb256c730bec291232cd43a29151f218f85e46e8ce6a9108ad3a81"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/git-guard.mjs",
+        "arguments": [
+          "--no-ask",
+          "--any-shell"
+        ]
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "scripts/tools.mjs#hookEntries",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "lanes-card.codex",
+      "source": {
+        "protocol": "codex-command-hook",
+        "event": "SessionStart",
+        "matcher": "startup|clear|compact"
+      },
+      "script": "hooks/lanes-card.mjs",
+      "materials": [
+        {
+          "path": "hooks/lanes-card.mjs",
+          "sha256": "c0380c27c0c613f788ba74fe13eb0bbc604942fce6e4d406c7a783bffbddd209"
+        },
+        {
+          "path": "hooks/lanes.md",
+          "sha256": "e8f625b942abe8fe7b883bf1000650b8b056b76c458ea1bb793e2af602a5f875"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/lanes-card.mjs",
+        "arguments": []
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "scripts/tools.mjs#hookEntries",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "git-guard.kimi",
+      "source": {
+        "protocol": "kimi-command-hook",
+        "event": "PreToolUse",
+        "matcher": "^Bash$"
+      },
+      "script": "hooks/git-guard.mjs",
+      "materials": [
+        {
+          "path": "hooks/git-guard.mjs",
+          "sha256": "45221ff594aa1126e8920118245dbfa8434505781bff2b51f32bc74c194edd87"
+        },
+        {
+          "path": "hooks/lib/git-policy.mjs",
+          "sha256": "3fd71cf280325a043a49286c19690abd5654e3aedea4dbd7a4844e126845e1fd"
+        },
+        {
+          "path": "hooks/lib/shell.mjs",
+          "sha256": "f1c55be104f5ca34fc06106562e7af7749097bf9272ab78a65a822ca54e57b21"
+        },
+        {
+          "path": "hooks/lib/git-context.mjs",
+          "sha256": "84685636feeb256c730bec291232cd43a29151f218f85e46e8ce6a9108ad3a81"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/hooks/git-guard.mjs",
+        "arguments": [
+          "--no-ask"
+        ]
+      },
+      "timeoutSeconds": 10,
+      "installation": {
+        "reference": "scripts/tools.mjs#kimiBlock",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "git-guard.opencode",
+      "source": {
+        "protocol": "opencode-plugin-callback",
+        "event": "tool.execute.before"
+      },
+      "script": "hooks/opencode-plugin.mjs",
+      "materials": [
+        {
+          "path": "hooks/opencode-plugin.mjs",
+          "sha256": "32b66bb2b110a55ad9e0df4ae982a6fe96c6abdef1ed1e359e4f6889e2ba2bdf"
+        },
+        {
+          "path": "hooks/lib/git-policy.mjs",
+          "sha256": "3fd71cf280325a043a49286c19690abd5654e3aedea4dbd7a4844e126845e1fd"
+        },
+        {
+          "path": "hooks/lib/shell.mjs",
+          "sha256": "f1c55be104f5ca34fc06106562e7af7749097bf9272ab78a65a822ca54e57b21"
+        },
+        {
+          "path": "hooks/lib/git-context.mjs",
+          "sha256": "84685636feeb256c730bec291232cd43a29151f218f85e46e8ce6a9108ad3a81"
+        },
+        {
+          "path": "hooks/lanes.md",
+          "sha256": "e8f625b942abe8fe7b883bf1000650b8b056b76c458ea1bb793e2af602a5f875"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "module-factory",
+        "entrypoint": "{itemDir}/hooks/opencode-plugin.mjs",
+        "arguments": [],
+        "export": "createPlugin",
+        "factoryOptions": {
+          "gitGuard": true
+        }
+      },
+      "timeoutSeconds": null,
+      "installation": {
+        "reference": "scripts/tools.mjs#opencodePluginFile",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "lanes-card.opencode",
+      "source": {
+        "protocol": "opencode-plugin-callback",
+        "event": "experimental.chat.system.transform"
+      },
+      "script": "hooks/opencode-plugin.mjs",
+      "materials": [
+        {
+          "path": "hooks/opencode-plugin.mjs",
+          "sha256": "32b66bb2b110a55ad9e0df4ae982a6fe96c6abdef1ed1e359e4f6889e2ba2bdf"
+        },
+        {
+          "path": "hooks/lib/git-policy.mjs",
+          "sha256": "3fd71cf280325a043a49286c19690abd5654e3aedea4dbd7a4844e126845e1fd"
+        },
+        {
+          "path": "hooks/lib/shell.mjs",
+          "sha256": "f1c55be104f5ca34fc06106562e7af7749097bf9272ab78a65a822ca54e57b21"
+        },
+        {
+          "path": "hooks/lib/git-context.mjs",
+          "sha256": "84685636feeb256c730bec291232cd43a29151f218f85e46e8ce6a9108ad3a81"
+        },
+        {
+          "path": "hooks/lanes.md",
+          "sha256": "e8f625b942abe8fe7b883bf1000650b8b056b76c458ea1bb793e2af602a5f875"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "module-factory",
+        "entrypoint": "{itemDir}/hooks/opencode-plugin.mjs",
+        "arguments": [],
+        "export": "createPlugin",
+        "factoryOptions": {
+          "gitGuard": true
+        }
+      },
+      "timeoutSeconds": null,
+      "installation": {
+        "reference": "scripts/tools.mjs#opencodePluginFile",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    },
+    {
+      "id": "commit-gate.git",
+      "source": {
+        "protocol": "git-hook",
+        "event": "commit-msg"
+      },
+      "script": "skills/install-commit-gate/commit-gate.mjs",
+      "materials": [
+        {
+          "path": "skills/install-commit-gate/commit-gate.mjs",
+          "sha256": "ed3ad3dec86f1b75a925c51a4154b4036d77440da3d28958a336073910251a36"
+        }
+      ],
+      "runtime": {
+        "name": "node",
+        "versionRange": ">=22",
+        "executable": "node"
+      },
+      "invocation": {
+        "kind": "command",
+        "entrypoint": "{itemDir}/skills/install-commit-gate/commit-gate.mjs",
+        "arguments": [
+          {
+            "kind": "event-argument",
+            "position": 1,
+            "name": "commitMessageFile"
+          }
+        ]
+      },
+      "timeoutSeconds": null,
+      "installation": {
+        "reference": "skills/install-commit-gate/SKILL.md",
+        "materialRoot": "{itemDir}",
+        "activation": "requires-consumer-binding"
+      }
+    }
+  ]
+}
