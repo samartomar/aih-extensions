@@ -188,6 +188,7 @@ For Claude Code alone, `node scripts/setup.mjs install --marketplace --yes` inst
 
 ## Documentation
 
+- [docs/hook-declarations.md](docs/hook-declarations.md): versioned authored hook source intent and the data-only consumer
 - [docs/tools.md](docs/tools.md): where each tool gets what, and how each was verified
 - [evals/README.md](evals/README.md): with-and-without evals, and the context cost per session
 - [docs/maintaining.md](docs/maintaining.md): vendoring, updating the upstream pins, project layout, checks
