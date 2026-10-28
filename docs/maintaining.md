@@ -9,7 +9,9 @@
 | `agents/`, `commands/`, `references/`, `licenses/` | Addy's reviewer agents, `/ship`, `/webperf`, checklists; upstream licenses | No: vendored |
 | `hooks/lib/` | The git policy and the shell reader it uses | Yes |
 | `hooks/` | Adapters: `git-guard.mjs` (Claude's hook protocol, also read by Cursor, Codex and Kimi Code), `opencode-plugin.mjs`, `skill-guard.mjs`, `lanes-card.mjs` | Yes |
-| `scripts/` | `vendor.mjs`, `setup.mjs` with `tools.mjs` (where each tool reads what), `check-upstream.mjs`, `measure-context.mjs` | Yes |
+| `hook-declarations/v1.json` | Authored hook source declarations | Yes |
+| `source-declarations/v1.json`, `source-declarations/v1.schema.json` | Authored framework identity, provenance, groupings and attributed compatibility declarations | Yes |
+| `scripts/` | `vendor.mjs`, `setup.mjs` with `tools.mjs` (where each tool reads what), `check-upstream.mjs`, `measure-context.mjs`, `hook-declarations.mjs`, `source-declarations.mjs` | Yes |
 | `.github/workflows/` | `tests.yml` on main pushes and pull requests (Windows and Linux); `upstream.yml` every 3 days | Yes |
 | `tests/`, `evals/` | Hook and installer tests; with-and-without evals | Yes |
 | `.claude-plugin/` | For the Claude Code plugin route and `claude plugin eval` | Yes |

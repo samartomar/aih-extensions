@@ -1,0 +1,169 @@
+{
+  "schemaVersion": 1,
+  "identity": {
+    "name": "aih-extensions",
+    "title": "AIH Extensions",
+    "description": "Specialist add-on for Matt Pocock's skills: Addy Osmani's security, performance, observability, CI, docs and launch skills, /ship with its reviewer agents, and a git guard, for Claude Code, Codex, Cursor, Kimi Code and opencode.",
+    "author": {
+      "name": "Samarjeet Singh Tomar",
+      "url": "https://github.com/samartomar"
+    },
+    "license": "MIT",
+    "repository": "https://github.com/samartomar/aih-extensions",
+    "versionSource": "package.json#version"
+  },
+  "provenance": {
+    "source": "scripts/upstream.config.mjs",
+    "upstreams": [
+      {
+        "key": "addy",
+        "repo": "https://github.com/addyosmani/agent-skills.git",
+        "sha": "aeac41d4d005999432bb7312f7ff06383a91d59d",
+        "vendored": true
+      },
+      {
+        "key": "matt",
+        "repo": "https://github.com/mattpocock/skills.git",
+        "sha": "49dd158d1076134a641b33efb035946536778336",
+        "vendored": false,
+        "note": "Matt Pocock's plugin is installed from his GitHub repo at this commit and is never vendored here; only the misc-bucket setup-pre-commit skill and the LICENSE are copied."
+      }
+    ]
+  },
+  "groups": [
+    {
+      "id": "upstream.addy",
+      "source": "scripts/upstream.config.mjs#copies",
+      "members": [
+        "skills/security-and-hardening",
+        "skills/performance-optimization",
+        "skills/observability-and-instrumentation",
+        "skills/ci-cd-and-automation",
+        "skills/deprecation-and-migration",
+        "skills/frontend-ui-engineering",
+        "skills/shipping-and-launch",
+        "skills/code-simplification",
+        "skills/api-and-interface-design",
+        "skills/documentation-and-adrs",
+        "skills/doubt-driven-development",
+        "skills/source-driven-development",
+        "skills/constraint-driven-development",
+        "skills/git-workflow-and-versioning",
+        "skills/idea-refine",
+        "skills/browser-testing-with-devtools",
+        "agents/code-reviewer.md",
+        "agents/security-auditor.md",
+        "agents/test-engineer.md",
+        "agents/web-performance-auditor.md",
+        "commands/ship.md",
+        "commands/webperf.md",
+        "references",
+        "licenses/addyosmani-agent-skills.LICENSE"
+      ]
+    },
+    {
+      "id": "upstream.matt",
+      "source": "scripts/upstream.config.mjs#copies",
+      "members": [
+        "skills/setup-pre-commit",
+        "licenses/mattpocock-skills.LICENSE"
+      ]
+    },
+    {
+      "id": "original",
+      "source": "AGENTS.md#project-constraints",
+      "members": [
+        "skills/ask-sam",
+        "skills/install-commit-gate",
+        "hooks",
+        "scripts",
+        "evals",
+        "tests"
+      ]
+    }
+  ],
+  "compatibility": {
+    "facts": [
+      {
+        "id": "runtime-requirement",
+        "tool": "all",
+        "kind": "requirement",
+        "statement": "Node.js 22 or later and git are required.",
+        "source": "README.md",
+        "evidence": null
+      },
+      {
+        "id": "guard-verified-claude",
+        "tool": "claude",
+        "kind": "verified",
+        "statement": "git-guard blocked git reset --hard and kept the work, asked before push, offered each skill exactly once with typed-only skills hidden, and typing a typed-only skill worked.",
+        "source": "docs/tools.md#verified-live",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "2.1.283", "model": "Haiku" }
+      },
+      {
+        "id": "guard-verified-cursor",
+        "tool": "cursor",
+        "kind": "verified",
+        "statement": "git-guard blocked git reset --hard and kept the work; a push was asked and auto-approved under --force. Whether typing a typed-only skill works was not tested.",
+        "source": "docs/tools.md#verified-live",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "CLI 2026.09.26" }
+      },
+      {
+        "id": "guard-verified-codex",
+        "tool": "codex",
+        "kind": "verified",
+        "statement": "git-guard blocked git reset --hard and kept the work, refused the push, offered the auto skills from ~/.codex/skills each once, and typing $ask-sam worked.",
+        "source": "docs/tools.md#verified-live",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "0.155.1" }
+      },
+      {
+        "id": "guard-verified-kimi",
+        "tool": "kimi",
+        "kind": "verified",
+        "statement": "git-guard blocked git reset --hard and kept the work and refused the push; typed-only skills stayed hidden from the model.",
+        "source": "docs/tools.md#verified-live",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "2.0.2", "model": "K3" }
+      },
+      {
+        "id": "guard-verified-opencode",
+        "tool": "opencode",
+        "kind": "verified",
+        "statement": "git-guard blocked git reset --hard and kept the work, refused the push, and offered 44 skills from ~/.claude/skills each once with typed-only skills hidden; /ask-sam worked.",
+        "source": "docs/tools.md#verified-live",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "1.18.26", "model": "DeepSeek Flash" }
+      },
+      {
+        "id": "codex-hooks-require-trust",
+        "tool": "codex",
+        "kind": "limitation",
+        "statement": "Codex runs new or changed hooks only after they are trusted in its interactive app; until then it skips them without a word, so the guard is off.",
+        "source": "docs/tools.md#codex",
+        "evidence": { "date": "2026-09-27", "platform": "Windows 11", "toolVersion": "0.155.1" }
+      },
+      {
+        "id": "codex-shared-location-disabled",
+        "tool": "codex",
+        "kind": "limitation",
+        "statement": "Shared skills location (~/.agents/skills) delivery is refused and stays disabled; installer fixtures do not establish native skill discovery, precedence or loading.",
+        "source": "docs/tools.md#codex-skill-selection-and-qualification",
+        "evidence": null
+      },
+      {
+        "id": "kimi-failed-hook-passes",
+        "tool": "kimi",
+        "kind": "limitation",
+        "statement": "A Kimi Code hook that fails, times out or cannot start lets the command through.",
+        "source": "docs/tools.md#kimi-code",
+        "evidence": null
+      },
+      {
+        "id": "cursor-git-bash-cli-fails-hooks",
+        "tool": "cursor",
+        "kind": "limitation",
+        "statement": "Cursor's CLI started from Git Bash wraps each command hook in PowerShell syntax and runs it through bash, so every command hook fails; start it from PowerShell, cmd or Windows Terminal.",
+        "source": "docs/tools.md#cursor",
+        "evidence": null
+      }
+    ]
+  }
+}
