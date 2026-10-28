@@ -92,6 +92,8 @@
           "items": {
             "type": "object",
             "required": ["id", "tool", "kind", "statement", "source", "evidence"],
+            "if": { "properties": { "kind": { "const": "verified" } }, "required": ["kind"] },
+            "then": { "properties": { "evidence": { "type": "object" } } },
             "additionalProperties": false,
             "properties": {
               "id": { "type": "string", "minLength": 1 },

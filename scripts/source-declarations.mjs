@@ -2,7 +2,7 @@
 // data. Never import the installer, a client adapter or a hook.
 import fs from 'node:fs';
 import path from 'node:path';
-import { fileURLToPath } from 'node:url';
+import { fileURLToPath, pathToFileURL } from 'node:url';
 
 const ROOT = fileURLToPath(new URL('../', import.meta.url));
 const KNOWN_VERSION = 1;
@@ -19,8 +19,9 @@ const refuse = (code) => ({
 function memberFile(root, relative) {
   if (!nonempty(relative) || relative.includes('\\') || path.posix.isAbsolute(relative)
     || relative.split('/').some((part) => !part || part === '.' || part === '..')) return null;
-  const resolved = path.resolve(root, relative);
-  const within = path.relative(root, resolved);
+  const canonicalRoot = fs.realpathSync(root);
+  const resolved = fs.realpathSync(path.resolve(canonicalRoot, relative));
+  const within = path.relative(canonicalRoot, resolved);
   if (within.startsWith('..') || path.isAbsolute(within)) return null;
   return resolved;
 }
@@ -61,11 +62,13 @@ export function readSourceDeclarations({ root = ROOT, version = KNOWN_VERSION } 
     for (const member of group.members) {
       if (seen.has(member)) return refuse('duplicate-member');
       seen.add(member);
-      const file = memberFile(root, member);
-      if (!file) return refuse('invalid-member');
       let stat;
-      try { stat = fs.statSync(file); }
-      catch { return { ...refuse('unknown-member'), member, group: group.id }; }
+      try {
+        const file = memberFile(root, member);
+        if (!file) return refuse('invalid-member');
+        stat = fs.statSync(file);
+      } catch { return { ...refuse('unknown-member'), member, group: group.id }; }
+      if (!stat.isFile() && !stat.isDirectory()) return refuse('invalid-member');
       members.push({ path: member, kind: stat.isDirectory() ? 'directory' : 'file' });
     }
     groups.push({ id: group.id, source: group.source, members });
@@ -100,7 +103,7 @@ export function readSourceDeclarations({ root = ROOT, version = KNOWN_VERSION } 
 // Regenerate the machine-derivable declaration parts from authored metadata and
 // compare them with the committed data. Exits 0 when they match.
 export async function checkDeclarations({ root = ROOT } = {}) {
-  const { upstreams, copies } = await import(path.join(root, 'scripts/upstream.config.mjs'));
+  const { upstreams, copies } = await import(pathToFileURL(path.resolve(root, 'scripts/upstream.config.mjs')).href);
   const declared = JSON.parse(fs.readFileSync(path.join(root, `source-declarations/v${KNOWN_VERSION}.json`), 'utf8'));
   const drift = [];
   const expectedUpstreams = Object.entries(upstreams).map(([key, upstream]) => ({

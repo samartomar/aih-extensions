@@ -154,3 +154,19 @@ test('the command-line consumer labels intent and exits unsuccessfully on refusa
 function pick(result) {
   return Object.fromEntries(Object.entries(result).filter(([, value]) => typeof value !== 'object' || value === null));
 }
+
+test('group members cannot resolve outside the source root through direct or intermediate links', (t) => {
+  const outside = fixture(t);
+  for (const member of ['external', 'external/references']) {
+    const options = fixture(t, (data, dir) => {
+      fs.symlinkSync(outside.root, path.join(dir, 'external'), process.platform === 'win32' ? 'junction' : 'dir');
+      data.groups[0].members = [member];
+    });
+    assert.equal(readSourceDeclarations(options).code, 'invalid-member', member);
+  }
+  const inside = fixture(t, (data, dir) => {
+    fs.symlinkSync(path.join(dir, 'references'), path.join(dir, 'internal'), process.platform === 'win32' ? 'junction' : 'dir');
+    data.groups[0].members = ['internal'];
+  });
+  assert.equal(readSourceDeclarations(inside).status, 'declared');
+});
