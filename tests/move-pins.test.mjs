@@ -45,3 +45,10 @@ test('a pin that is not written once in either file moves nothing', (t) => {
   assert.throws(() => movePins({ root: dir, moves: [{ name: 'matt', pinned: sha, latest: '1'.repeat(40) }] }), /not written once/);
   assert.deepEqual(files.map((f) => fs.readFileSync(path.join(dir, f), 'utf8')), before);
 });
+
+test('check-upstream --apply moves pins only through movePins', () => {
+  const script = fs.readFileSync(path.join(root, 'scripts/check-upstream.mjs'), 'utf8');
+  assert.match(script, /import \{ movePins \} from '\.\/move-pins\.mjs';/);
+  assert.match(script, /movePins\(\{ root: ROOT,/);
+  assert.doesNotMatch(script, /upstream\.config\.mjs'\)|sha: '\$\{/);
+});
