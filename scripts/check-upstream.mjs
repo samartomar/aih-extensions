@@ -14,9 +14,9 @@ import { spawnSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { upstreams, copies } from './upstream.config.mjs';
 import { checkoutPinned, resolveRef } from './git-cache.mjs';
+import { movePins } from './move-pins.mjs';
 
 const ROOT = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
-const CONFIG = path.join(ROOT, 'scripts', 'upstream.config.mjs');
 const argv = process.argv.slice(2);
 const apply = argv.includes('--apply');
 const outDir = argv.includes('--out') ? path.resolve(argv[argv.indexOf('--out') + 1]) : null;
@@ -64,12 +64,7 @@ const moved = report.upstreams.filter((u) => u.latest !== u.pinned);
 
 if (moved.length) report.status = 'moved';
 if (moved.length && apply) {
-  let text = fs.readFileSync(CONFIG, 'utf8');
-  for (const u of moved) {
-    if (text.split(`sha: '${u.pinned}'`).length !== 2) throw new Error(`the ${u.name} pin is not written once as sha: '${u.pinned}'`);
-    text = text.replace(`sha: '${u.pinned}'`, `sha: '${u.latest}'`);
-  }
-  fs.writeFileSync(CONFIG, text);
+  movePins({ root: ROOT, moves: moved.map((u) => ({ name: u.name, pinned: u.pinned, latest: u.latest })) });
 
   const vendor = run(process.execPath, ['scripts/vendor.mjs']);
   report.steps.push({ step: 'Re-vendor with exact patches', ok: vendor.status === 0, detail: tail(vendor, vendor.status === 0 ? 1 : 15) });

@@ -11,7 +11,7 @@
 | `hooks/` | Adapters: `git-guard.mjs` (Claude's hook protocol, also read by Cursor, Codex and Kimi Code), `opencode-plugin.mjs`, `skill-guard.mjs`, `lanes-card.mjs` | Yes |
 | `hook-declarations/v1.json` | Authored hook source declarations | Yes |
 | `source-declarations/v1.json`, `source-declarations/v1.schema.json` | Authored framework identity, provenance, groupings and attributed compatibility declarations | Yes |
-| `scripts/` | `vendor.mjs`, `setup.mjs` with `tools.mjs` (where each tool reads what), `check-upstream.mjs`, `measure-context.mjs`, `hook-declarations.mjs`, `source-declarations.mjs` | Yes |
+| `scripts/` | `vendor.mjs`, `setup.mjs` with `tools.mjs` (where each tool reads what), `check-upstream.mjs` with `move-pins.mjs`, `measure-context.mjs`, `hook-declarations.mjs`, `source-declarations.mjs` | Yes |
 | `.github/workflows/` | `tests.yml` on main pushes and pull requests (Windows and Linux); `upstream.yml` every 3 days | Yes |
 | `tests/`, `evals/` | Hook and installer tests; with-and-without evals | Yes |
 | `.claude-plugin/` | For the Claude Code plugin route and `claude plugin eval` | Yes |
@@ -30,7 +30,7 @@ Matt's skills are not vendored: the installer copies them from his GitHub repo a
 
 ## Updating an upstream pin
 
-[`.github/workflows/upstream.yml`](../.github/workflows/upstream.yml) does the first steps every 3 days (and on demand from the Actions tab). It runs `node scripts/check-upstream.mjs --apply`, which compares each pin with its upstream's default branch and, if either moved, moves the pins, re-vendors, checks Matt's skill list and runs the tests. Then:
+[`.github/workflows/upstream.yml`](../.github/workflows/upstream.yml) does the first steps every 3 days (and on demand from the Actions tab). It runs `node scripts/check-upstream.mjs --apply`, which compares each pin with its upstream's default branch and, if either moved, moves the pins (in `scripts/upstream.config.mjs` and the declared provenance in `source-declarations/v1.json`), re-vendors, checks Matt's skill list and runs the tests. Then:
 
 - **Ready** (everything passed): the result goes to the `upstream-update` branch, and an issue assigned to the repo owner lists the upstream commits, the changed files this repo takes, and a link to open the pull request.
 - **Needs work** (a patch no longer matches, a skill vanished, a test failed): an issue with the failing step's output, and no branch.
@@ -38,7 +38,7 @@ Matt's skills are not vendored: the installer copies them from his GitHub repo a
 
 An issue is updated, not duplicated, while upstream keeps moving. The same script runs locally: without `--apply` it only reports. By hand:
 
-1. Change the `sha` in `scripts/upstream.config.mjs`.
+1. Change the `sha` in `scripts/upstream.config.mjs` and the same upstream's `sha` in `source-declarations/v1.json` (`node scripts/source-declarations.mjs check` reports `current` when they match).
 2. Run `npm run vendor`, and fix or drop any patch it rejects. Never loosen a count.
 3. Read the upstream diff. Exact patches catch changed wording, not changed meaning.
 4. Run the required checks below. Review changed prompt-loaded text separately from hook or installer behavior.
