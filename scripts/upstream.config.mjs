@@ -9,11 +9,11 @@
 export const upstreams = {
   addy: {
     repo: 'https://github.com/addyosmani/agent-skills.git',
-    sha: 'aeac41d4d005999432bb7312f7ff06383a91d59d',
+    sha: '8bfcc1f9916f2eea55494d8c1fa7f4bde867dd9e',
   },
   matt: {
     repo: 'https://github.com/mattpocock/skills.git',
-    sha: '59db609eb1e18aaf59b63284d0e52255aff0c63c',
+    sha: 'a496f5513d4a4cf889bc48e189e579f4b0bdf6aa',
   },
 };
 
