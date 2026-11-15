@@ -1,6 +1,6 @@
 # aih-extensions
 
-A curated, non-conflicting set of agent skills: Matt Pocock's development lifecycle, Addy Osmani's specialists for what it leaves out, and git guardrails. It installs from GitHub into Claude Code, Codex, Cursor, Kimi Code and opencode, with no plugin marketplace.
+A curated, non-conflicting set of agent skills: Matt Pocock's development lifecycle, Addy Osmani's specialists for what it leaves out, and git guardrails. Direct installation from GitHub supports Claude Code, Codex, Cursor, Kimi Code and opencode. A separate Claude Code marketplace route is also supported; use one route at a time.
 
 [![License: MIT](https://img.shields.io/badge/license-MIT-blue.svg)](LICENSE)
 
@@ -81,7 +81,7 @@ Running Matt's and Addy's collections side by side gives two skills each for int
  agree on terms      write it     slice it        test-first     standards + spec  improve the setup
 ```
 
-Instead of `/implement` per ticket, `/implement-spec` builds a whole spec on one integration branch, with subagents working the ready tickets in parallel. Bugs go to `/diagnosing-bugs`, module shape to `/codebase-design`. When unsure, type `/ask-matt`. All 27 skills are described in [Matt's reference](https://github.com/mattpocock/skills#reference).
+Where the project's workflow permits it, `/implement-spec` builds a whole spec on one integration branch, with subagents working the ready tickets in parallel. Bugs go to `/diagnosing-bugs`, module shape to `/codebase-design`. When unsure, type `/ask-matt`. The installed revision's skills are described in [Matt's reference](https://github.com/mattpocock/skills#reference).
 
 ### On-demand specialists (Addy Osmani)
 

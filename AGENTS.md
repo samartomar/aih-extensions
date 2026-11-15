@@ -10,6 +10,11 @@ layer. Commit locally when authorized, then run Matt's /code-review against a fi
 base and the originating requirements before merge; that skill reads committed
 changes. /ship handles launch readiness. Preserve the project gates below.
 
+For maintainer assignments, keep the coordinating session in its supplied
+workspace and target this Git root explicitly for commands and edits. Load these
+product rules from that session. Public contributors can use this repository
+independently; private startup routing stays outside public files.
+
 Public work uses fully qualified samartomar/aih-extensions#<number> references and explicit
 --repo samartomar/aih-extensions on gh issue commands. Keep public text public-safe; never copy
 private plans or private links into this repository. Category and semver labels do
@@ -42,3 +47,12 @@ publication. Carry any explicit authorization through its agreed scope.
 - Machine setup and cleanup go through `scripts/setup.mjs` (`npm run setup | status | teardown | clean`, each a dry run without `--yes`). Two routes, never side by side: direct (default, every detected tool, tracked in `~/.aih-extensions/manifest.json`) and `--marketplace` (Claude Code only). Uninstall must keep removing both, including hand-installed marketplace copies. Anything new this repo creates on a machine (a folder, a config entry, a temp dir prefix) must be removed by `uninstall --all` or `clean`; add it there in the same change. Temp prefixes start with `aihx-`: the AI Harness project owns `aih-*` in the temp folder.
 - `.github/workflows/upstream.yml` runs `scripts/check-upstream.mjs --apply` every 3 days and opens an issue for the owner; it never merges. Keep each pin written once as `sha: '<40 hex>'` in `upstream.config.mjs` and once as `"sha": "<40 hex>"` in `source-declarations/v1.json`, since `scripts/move-pins.mjs` moves both by exact text.
 - Release: bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and `package.json` together.
+
+## Workflow references
+
+Use the managed Matt Pocock skills and Extensions within this repository's rules.
+Keep upstream skills in their managed installation, unchanged by repository cleanup.
+
+- [Issue routing](docs/agents/issue-tracker.md): owning delivery issue and intake.
+- [Triage](docs/agents/triage-labels.md): existing label roles and mappings.
+- [Domain documentation](docs/agents/domain.md): vocabulary and decision homes.

@@ -9,8 +9,11 @@ disable-model-invocation: true
 Install this skill's `commit-gate.mjs` as a `commit-msg` hook in the requested
 repository. Read the script header for its checks and `VERSION`.
 
-1. **Locate:** resolve `git rev-parse --show-toplevel`, the effective
-   `core.hooksPath` and existing `commit-msg` hook. Stop if this is not a Git
+1. **Locate:** resolve the repository requested by the user, then use
+   `git -C <requested-repository> rev-parse --show-toplevel` to establish its root.
+   A coordinating workspace or current shell directory does not select the
+   installation target. Resolve the effective `core.hooksPath` and existing
+   `commit-msg` hook in that same repository. Stop if the target is not a Git
    worktree. Identify a shared hooks directory before editing it; repository
    installation does not authorize changing hooks used by other repositories.
 2. **Copy:** place the gate at `<root>/.githooks/commit-gate.mjs`. Inspect and
