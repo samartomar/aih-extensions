@@ -13,7 +13,7 @@ export const upstreams = {
   },
   matt: {
     repo: 'https://github.com/mattpocock/skills.git',
-    sha: '5863806dd4e15c63174bee4e7515a4256792ecfa',
+    sha: 'abeeaf95660ba9e8b7c753eb38f441ca707a8823',
   },
 };
 
