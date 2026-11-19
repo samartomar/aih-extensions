@@ -9,11 +9,11 @@
 export const upstreams = {
   addy: {
     repo: 'https://github.com/addyosmani/agent-skills.git',
-    sha: '8bfcc1f9916f2eea55494d8c1fa7f4bde867dd9e',
+    sha: '8c99fa36d90068c82d547f7c12a9d67a3e95f4ee',
   },
   matt: {
     repo: 'https://github.com/mattpocock/skills.git',
-    sha: 'a496f5513d4a4cf889bc48e189e579f4b0bdf6aa',
+    sha: '5863806dd4e15c63174bee4e7515a4256792ecfa',
   },
 };
 
@@ -97,8 +97,8 @@ export const patches = [
   },
   {
     file: 'skills/documentation-and-adrs/SKILL.md',
-    find: 'description: Records decisions and documentation. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, or when you need to record context that future engineers and agents will need to understand the codebase.',
-    replace: 'description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments. ADRs belong to domain-modeling."',
+    find: 'description: Records decisions and documentation, and detects when documentation has drifted from the code it describes. Use when you need to document an architecture decision (ADR) or the reasoning behind a design choice, when changing public APIs, shipping features, when docs may be stale or out of sync with the code they describe, when working out which module docs are still accurate, or when setting up a check so docs cannot silently go out of date again.',
+    replace: 'description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments, and check documentation for drift from code. ADRs belong to domain-modeling."',
   },
   {
     "file": "skills/documentation-and-adrs/SKILL.md",
@@ -109,6 +109,36 @@ export const patches = [
     "file": "skills/documentation-and-adrs/SKILL.md",
     "find": "## Architecture Decision Records (ADRs)\n\nADRs capture the reasoning behind significant technical decisions. They're the highest-value documentation you can write.\n\n### When to Write an ADR\n\n- Choosing a framework, library, or major dependency\n- Designing a data model or database schema\n- Selecting an authentication strategy\n- Deciding on an API architecture (REST vs. GraphQL vs. tRPC)\n- Choosing between build tools, hosting platforms, or infrastructure\n- Any decision that would be expensive to reverse\n\n### Match the existing convention first\n\nBefore creating an ADR, inspect the available repository context for an established convention — existing ADRs, project instructions, and ADR-related configuration or tooling (e.g. an `.adr-dir` file). An established convention overrides the defaults below. Match:\n\n- **Location and format** — e.g. `docs/adr/*.md`, `Documentation/Decisions/*.rst`, a MADR layout, or an `adr-tools` setup. Match the existing directory, file extension, and markup (Markdown vs reStructuredText).\n- **Numbering and naming** — continue the existing sequence and filename pattern (`ADR-004-Title.rst`, `0004-title.md`, …); don't restart at 001 or introduce a second scheme.\n- **Section headings** — reuse the project's heading set rather than imposing this template's.\n\nIf the available evidence conflicts, surface the conflict rather than silently introducing another scheme. Only when no convention can be established do you apply the default below.\n\n### ADR Template\n\nStore ADRs in `docs/decisions/` with sequential numbering (unless the project already uses another location — see above):\n\n```markdown\n# ADR-001: Use PostgreSQL for primary database\n\n## Status\nProposed | Accepted | Superseded by ADR-XXX | Deprecated\n\n## Date\n2025-01-15\n\n## Context\nWe need a primary database for the task management application. Key requirements:\n- Relational data model (users, tasks, teams with relationships)\n- ACID transactions for task state changes\n- Support for full-text search on task content\n- Managed hosting available (for small team, limited ops capacity)\n\n## Decision\nUse PostgreSQL with Prisma ORM.\n\n## Alternatives Considered\n\n### MongoDB\n- Pros: Flexible schema, easy to start with\n- Cons: Our data is inherently relational; would need to manage relationships manually\n- Rejected: Relational data in a document store leads to complex joins or data duplication\n\n### SQLite\n- Pros: Zero configuration, embedded, fast for reads\n- Cons: Limited concurrent write support, no managed hosting for production\n- Rejected: Not suitable for multi-user web application in production\n\n### MySQL\n- Pros: Mature, widely supported\n- Cons: PostgreSQL has better JSON support, full-text search, and ecosystem tooling\n- Rejected: PostgreSQL is the better fit for our feature requirements\n\n## Consequences\n- Prisma provides type-safe database access and migration management\n- We can use PostgreSQL's full-text search instead of adding Elasticsearch\n- Team needs PostgreSQL knowledge (standard skill, low risk)\n- Hosting on managed service (Supabase, Neon, or RDS)\n```\n\n### ADR Lifecycle\n\n```\nPROPOSED → ACCEPTED → (SUPERSEDED or DEPRECATED)\n```\n\n- **Don't delete old ADRs.** They capture historical context.\n- When a decision changes, write a new ADR that references and supersedes the old one.\n\n",
     "replace": "## Architecture Decision Records (ADRs)\n\nUse `domain-modeling` for ADRs, including repositories with an established\nlong-form format. Continue here for user and developer documentation.\n\n"
+  },
+
+  {
+    file: 'skills/documentation-and-adrs/SKILL.md',
+    find: `code=$(git log -1 --format=%H -- src/rate-limiter.js)
+doc=$(git log -1 --format=%H -- docs/rate-limiter.md)
+if [ "$code" = "$doc" ]; then echo "current: changed together"
+elif git merge-base --is-ancestor "$doc" "$code"; then echo "stale: code changed after the doc"
+elif git merge-base --is-ancestor "$code" "$doc"; then echo "current: doc changed after the code"
+else echo "can't tell"; fi`,
+    replace: `# Commit order prioritizes review. Verify the doc against the code to confirm.
+code_path=src/rate-limiter.js
+doc_path=docs/rate-limiter.md
+
+if ! shallow=$(git rev-parse --is-shallow-repository) || [ "$shallow" != false ] ||
+   [ ! -f "$code_path" ] || [ ! -f "$doc_path" ] ||
+   ! git ls-files --error-unmatch -- "$code_path" "$doc_path" >/dev/null 2>&1 ||
+   ! git diff --quiet HEAD -- "$code_path" "$doc_path" ||
+   ! code=$(git log -1 --format=%H -- "$code_path") || [ -z "$code" ] ||
+   ! doc=$(git log -1 --format=%H -- "$doc_path") || [ -z "$doc" ]; then
+  echo "can't tell"
+elif [ "$code" = "$doc" ]; then
+  echo "current by commit order: changed together"
+elif git merge-base --is-ancestor "$doc" "$code"; then
+  echo "potential drift: code changed after the doc"
+elif git merge-base --is-ancestor "$code" "$doc"; then
+  echo "current by commit order: doc changed after the code"
+else
+  echo "can't tell"
+fi`,
   },
 
   // --- Cross-references to skills Matt's plugin owns.
@@ -185,6 +215,11 @@ export const patches = [
   },
 
   // --- Shared checklists.
+  {
+    file: 'references/accessibility-checklist.md',
+    find: 'Quick reference for WCAG 2.2 AA conformance. Use `frontend-ui-engineering` while building interfaces and `accessibility-engineering` when auditing and remediating them.',
+    replace: 'Quick reference for WCAG 2.2 AA conformance. Use alongside `frontend-ui-engineering` when building or reviewing interfaces.',
+  },
   {
     file: 'references/definition-of-done.md',
     find: 'The depth behind these items lives in `code-review-and-quality` (the five-axis review) and `code-simplification` (reducing complexity without changing behavior).',
