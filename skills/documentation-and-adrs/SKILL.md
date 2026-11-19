@@ -1,6 +1,6 @@
 ---
 name: documentation-and-adrs
-description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments. ADRs belong to domain-modeling."
+description: "Write READMEs, API references, OpenAPI docs, changelogs and explanatory comments, and check documentation for drift from code. ADRs belong to domain-modeling."
 disable-model-invocation: true
 ---
 
@@ -187,6 +187,37 @@ After checking the technical content, review the prose for the people who will u
 2. Replace stock introductions, promotional adjectives, and repeated summaries with the concrete information the reader needs. Do not replace an unsupported claim with an invented example or a stronger guarantee. Keep necessary technical repetition and the project's established terminology.
 3. Compare the edited document with the original and its sources. Restore any lost qualifier or caveat, verify command and code examples still work as documented, and explain any unresolved factual question rather than polishing it away.
 
+## Documentation Drift
+
+A document that was true when written still reads as authoritative after the code moves on. When a doc may be stale, decide from version control, not from how confident the doc sounds:
+
+```bash
+# Commit order prioritizes review. Verify the doc against the code to confirm.
+code_path=src/rate-limiter.js
+doc_path=docs/rate-limiter.md
+
+if ! shallow=$(git rev-parse --is-shallow-repository) || [ "$shallow" != false ] ||
+   [ ! -f "$code_path" ] || [ ! -f "$doc_path" ] ||
+   ! git ls-files --error-unmatch -- "$code_path" "$doc_path" >/dev/null 2>&1 ||
+   ! git diff --quiet HEAD -- "$code_path" "$doc_path" ||
+   ! code=$(git log -1 --format=%H -- "$code_path") || [ -z "$code" ] ||
+   ! doc=$(git log -1 --format=%H -- "$doc_path") || [ -z "$doc" ]; then
+  echo "can't tell"
+elif [ "$code" = "$doc" ]; then
+  echo "current by commit order: changed together"
+elif git merge-base --is-ancestor "$doc" "$code"; then
+  echo "potential drift: code changed after the doc"
+elif git merge-base --is-ancestor "$code" "$doc"; then
+  echo "current by commit order: doc changed after the code"
+else
+  echo "can't tell"
+fi
+```
+
+Unordered history (divergent branches, a rebase, a shallow clone) means "can't tell". Say that; never report it as current.
+
+When you correct a doc that has a change log, append a dated entry that says why it changed. Never rewrite or collapse earlier entries: git keeps the old text, but the log is the only record of the reasons.
+
 ## Common Rationalizations
 
 | Rationalization | Reality |
@@ -196,6 +227,7 @@ After checking the technical content, review the prose for the people who will u
 | "Nobody reads docs" | Agents do. Future engineers do. Your 3-months-later self does. |
 | "ADRs are overhead" | A 10-minute ADR prevents a 2-hour debate about the same decision six months later. |
 | "Comments get outdated" | Comments on *why* are stable. Comments on *what* get outdated — that's why you only write the former. |
+| "I'll tidy the change log while I'm in here" | Git holds the old text; the log holds the reasons. Rewriting it destroys the only copy of the reasoning and preserves nothing. |
 
 ## Red Flags
 
@@ -206,6 +238,8 @@ After checking the technical content, review the prose for the people who will u
 - TODO comments that have been there for weeks
 - No ADRs in a project with significant architectural choices
 - Documentation that restates the code instead of explaining intent
+- A change log that has been rewritten rather than appended to
+- A doc called current when the commit order of the doc and its code could not be determined
 
 ## Verification
 
@@ -218,3 +252,5 @@ After documenting:
 - [ ] No commented-out code remains
 - [ ] Rules files (CLAUDE.md etc.) are current and accurate
 - [ ] Prose edits preserve source details, decision trade-offs, and qualifiers without adding unsupported guarantees
+- [ ] Change logs were appended to rather than rewritten
+- [ ] A doc whose staleness could not be determined is reported as "can't tell", not as current
