@@ -9,11 +9,11 @@
 export const upstreams = {
   addy: {
     repo: 'https://github.com/addyosmani/agent-skills.git',
-    sha: '8c99fa36d90068c82d547f7c12a9d67a3e95f4ee',
+    sha: 'e997ac5b9a74eab332d5e9793bb38a38c8cfdd74',
   },
   matt: {
     repo: 'https://github.com/mattpocock/skills.git',
-    sha: '5863806dd4e15c63174bee4e7515a4256792ecfa',
+    sha: '6f7f7831a625f040a8e06a0e7954826b87ce775a',
   },
 };
 
@@ -215,22 +215,72 @@ fi`,
   },
 
   // --- Shared checklists.
-  {
-    file: 'references/accessibility-checklist.md',
+  ...[
+    'references/accessibility-checklist.md',
+    'skills/frontend-ui-engineering/references/shared/accessibility-checklist.md',
+    'skills/shipping-and-launch/references/shared/accessibility-checklist.md',
+  ].map((file) => ({
+    file,
     find: 'Quick reference for WCAG 2.2 AA conformance. Use `frontend-ui-engineering` while building interfaces and `accessibility-engineering` when auditing and remediating them.',
     replace: 'Quick reference for WCAG 2.2 AA conformance. Use alongside `frontend-ui-engineering` when building or reviewing interfaces.',
-  },
-  {
-    file: 'references/definition-of-done.md',
-    find: 'The depth behind these items lives in `code-review-and-quality` (the five-axis review) and `code-simplification` (reducing complexity without changing behavior).',
-    replace: 'The depth behind these items lives in `code-review` (the two-axis review) and `code-simplification` (reducing complexity without changing behavior).',
-  },
-  { file: 'references/definition-of-done.md', find: '(see `documentation-and-adrs`)', replace: '(see `domain-modeling`)' },
-  {
-    file: 'references/definition-of-done.md',
-    find: 'Use it as the final gate in `planning-and-task-breakdown`, `incremental-implementation`, and `shipping-and-launch`.',
-    replace: 'Use it as the final gate in `/to-tickets` acceptance criteria, `/implement`, and `shipping-and-launch`.',
-  },
+  })),
+  ...[
+    'references/definition-of-done.md',
+    'skills/shipping-and-launch/references/shared/definition-of-done.md',
+  ].flatMap((file) => [
+    {
+      file,
+      find: 'The depth behind these items lives in `code-review-and-quality` (the five-axis review) and `code-simplification` (reducing complexity without changing behavior).',
+      replace: 'The depth behind these items lives in `code-review` (the two-axis review) and `code-simplification` (reducing complexity without changing behavior).',
+    },
+    { file, find: '(see `documentation-and-adrs`)', replace: '(see `domain-modeling`)' },
+    {
+      file,
+      find: 'Use it as the final gate in `planning-and-task-breakdown`, `incremental-implementation`, and `shipping-and-launch`.',
+      replace: 'Use it as the final gate in `/to-tickets` acceptance criteria, `/implement`, and `shipping-and-launch`.',
+    },
+  ]),
   { file: 'references/testing-patterns.md', find: 'illustrating the universal principles from the `test-driven-development` skill.', replace: 'illustrating the universal principles from the `tdd` skill.' },
-  { file: 'references/orchestration-patterns.md', find: '/review → code-reviewer (with code-review-and-quality skill) → report', replace: 'code-reviewer (invoked directly) → report' },
+  ...[
+    'references/orchestration-patterns.md',
+    'skills/doubt-driven-development/references/shared/orchestration-patterns.md',
+  ].map((file) => ({
+    file,
+    find: '/review → code-reviewer (with code-review-and-quality skill) → report',
+    replace: 'code-reviewer (invoked directly) → report',
+  })),
+  ...[
+    [
+      '**Examples in this repo:** `/review`, `/test`, `/code-simplify`.',
+      '**For routine work:** use Matt’s `code-review` for PR review and `tdd` for implementation tests. Use `code-simplification` when a change calls for a dedicated simplification pass.',
+    ],
+    [
+      '**Examples in this repo:** `/ship`.',
+      '**Launch review:** use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.',
+    ],
+    [
+      'user runs:  /spec  →  /plan  →  /build  →  /test  →  /review  →  /ship',
+      'user runs:  /to-spec  →  /to-tickets  →  /implement with tests  →  code-review  →  launch review',
+    ],
+    [
+      'For a routine PR review, stick with `/ship`.',
+      'For a routine PR review, use Matt’s `code-review`.',
+    ],
+    [
+      '- Production-bound verdict on a known diff → use `/ship` (subagents).',
+      '- Production-bound verdict on a known diff → use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.',
+    ],
+    [
+      '- The user already knew they wanted a review; they could have called `/review` directly',
+      '- The user already knew they wanted a review and could have invoked `code-review` directly',
+    ],
+    [
+      "An agent that calls `/spec`, then `/plan`, then `/build`, etc. on the user's behalf.",
+      "An agent that calls `/to-spec`, `/to-tickets` and `/implement` in sequence on the user's behalf.",
+    ],
+  ].map(([find, replace]) => ({
+    file: 'skills/doubt-driven-development/references/shared/orchestration-patterns.md',
+    find,
+    replace,
+  })),
 ];
