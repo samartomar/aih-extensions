@@ -18,13 +18,13 @@
       {
         "key": "addy",
         "repo": "https://github.com/addyosmani/agent-skills.git",
-        "sha": "8c99fa36d90068c82d547f7c12a9d67a3e95f4ee",
+        "sha": "e997ac5b9a74eab332d5e9793bb38a38c8cfdd74",
         "vendored": true
       },
       {
         "key": "matt",
         "repo": "https://github.com/mattpocock/skills.git",
-        "sha": "5863806dd4e15c63174bee4e7515a4256792ecfa",
+        "sha": "6f7f7831a625f040a8e06a0e7954826b87ce775a",
         "vendored": false,
         "note": "Matt Pocock's plugin is installed from his GitHub repo at this commit and is never vendored here; only the misc-bucket setup-pre-commit skill and the LICENSE are copied."
       }

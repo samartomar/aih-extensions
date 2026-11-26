@@ -2,11 +2,11 @@
   "upstreams": {
     "addy": {
       "repo": "https://github.com/addyosmani/agent-skills.git",
-      "sha": "8c99fa36d90068c82d547f7c12a9d67a3e95f4ee"
+      "sha": "e997ac5b9a74eab332d5e9793bb38a38c8cfdd74"
     },
     "matt": {
       "repo": "https://github.com/mattpocock/skills.git",
-      "sha": "5863806dd4e15c63174bee4e7515a4256792ecfa"
+      "sha": "6f7f7831a625f040a8e06a0e7954826b87ce775a"
     }
   },
   "generated": [
@@ -43,8 +43,10 @@
     "skills/documentation-and-adrs/agents/openai.yaml",
     "skills/doubt-driven-development/SKILL.md",
     "skills/doubt-driven-development/agents/openai.yaml",
+    "skills/doubt-driven-development/references/shared/orchestration-patterns.md",
     "skills/frontend-ui-engineering/SKILL.md",
     "skills/frontend-ui-engineering/agents/openai.yaml",
+    "skills/frontend-ui-engineering/references/shared/accessibility-checklist.md",
     "skills/git-workflow-and-versioning/SKILL.md",
     "skills/git-workflow-and-versioning/agents/openai.yaml",
     "skills/idea-refine/SKILL.md",
@@ -54,15 +56,22 @@
     "skills/idea-refine/refinement-criteria.md",
     "skills/idea-refine/scripts/idea-refine.sh",
     "skills/observability-and-instrumentation/SKILL.md",
+    "skills/observability-and-instrumentation/references/shared/observability-checklist.md",
     "skills/performance-optimization/SKILL.md",
     "skills/performance-optimization/agents/openai.yaml",
     "skills/performance-optimization/references/optimization-patterns.md",
+    "skills/performance-optimization/references/shared/performance-checklist.md",
     "skills/security-and-hardening/SKILL.md",
     "skills/security-and-hardening/agents/openai.yaml",
     "skills/security-and-hardening/references/hardening-patterns.md",
+    "skills/security-and-hardening/references/shared/security-checklist.md",
     "skills/setup-pre-commit/SKILL.md",
     "skills/setup-pre-commit/agents/openai.yaml",
     "skills/shipping-and-launch/SKILL.md",
+    "skills/shipping-and-launch/references/shared/accessibility-checklist.md",
+    "skills/shipping-and-launch/references/shared/definition-of-done.md",
+    "skills/shipping-and-launch/references/shared/performance-checklist.md",
+    "skills/shipping-and-launch/references/shared/security-checklist.md",
     "skills/source-driven-development/SKILL.md",
     "skills/source-driven-development/agents/openai.yaml"
   ]
