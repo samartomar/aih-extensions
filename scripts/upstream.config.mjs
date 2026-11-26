@@ -215,11 +215,15 @@ fi`,
   },
 
   // --- Shared checklists.
-  {
-    file: 'references/accessibility-checklist.md',
+  ...[
+    'references/accessibility-checklist.md',
+    'skills/frontend-ui-engineering/references/shared/accessibility-checklist.md',
+    'skills/shipping-and-launch/references/shared/accessibility-checklist.md',
+  ].map((file) => ({
+    file,
     find: 'Quick reference for WCAG 2.2 AA conformance. Use `frontend-ui-engineering` while building interfaces and `accessibility-engineering` when auditing and remediating them.',
     replace: 'Quick reference for WCAG 2.2 AA conformance. Use alongside `frontend-ui-engineering` when building or reviewing interfaces.',
-  },
+  })),
   ...[
     'references/definition-of-done.md',
     'skills/shipping-and-launch/references/shared/definition-of-done.md',
@@ -244,5 +248,39 @@ fi`,
     file,
     find: '/review → code-reviewer (with code-review-and-quality skill) → report',
     replace: 'code-reviewer (invoked directly) → report',
+  })),
+  ...[
+    [
+      '**Examples in this repo:** `/review`, `/test`, `/code-simplify`.',
+      '**For routine work:** use Matt’s `code-review` for PR review and `tdd` for implementation tests. Use `code-simplification` when a change calls for a dedicated simplification pass.',
+    ],
+    [
+      '**Examples in this repo:** `/ship`.',
+      '**Launch review:** use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.',
+    ],
+    [
+      'user runs:  /spec  →  /plan  →  /build  →  /test  →  /review  →  /ship',
+      'user runs:  /to-spec  →  /to-tickets  →  /implement with tests  →  code-review  →  launch review',
+    ],
+    [
+      'For a routine PR review, stick with `/ship`.',
+      'For a routine PR review, use Matt’s `code-review`.',
+    ],
+    [
+      '- Production-bound verdict on a known diff → use `/ship` (subagents).',
+      '- Production-bound verdict on a known diff → use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.',
+    ],
+    [
+      '- The user already knew they wanted a review; they could have called `/review` directly',
+      '- The user already knew they wanted a review and could have invoked `code-review` directly',
+    ],
+    [
+      "An agent that calls `/spec`, then `/plan`, then `/build`, etc. on the user's behalf.",
+      "An agent that calls `/to-spec`, `/to-tickets` and `/implement` in sequence on the user's behalf.",
+    ],
+  ].map(([find, replace]) => ({
+    file: 'skills/doubt-driven-development/references/shared/orchestration-patterns.md',
+    find,
+    replace,
   })),
 ];

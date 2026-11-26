@@ -37,7 +37,7 @@ code-reviewer (invoked directly) → report
 
 **Use when:** the same single-persona invocation happens repeatedly with the same setup.
 
-**Examples in this repo:** `/review`, `/test`, `/code-simplify`.
+**For routine work:** use Matt’s `code-review` for PR review and `tdd` for implementation tests. Use `code-simplification` when a change calls for a dedicated simplification pass.
 
 **Cost:** same as direct invocation. The slash command is just a saved prompt.
 
@@ -61,7 +61,7 @@ Multiple personas operate on the same input concurrently, each producing an inde
 - The merge step is small enough to stay in the main context
 - Wall-clock latency matters
 
-**Examples in this repo:** `/ship`.
+**Launch review:** use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.
 
 **Cost:** N parallel sub-agent contexts + one merge turn. Higher than direct invocation, but faster wall-clock and produces better reports because each sub-agent stays focused on its single perspective.
 
@@ -80,7 +80,7 @@ If any answer is "no," fall back to direct invocation or a single-persona comman
 The user runs slash commands in a defined order, carrying context (or commit history) between them. There is no orchestrator agent — the user IS the orchestrator.
 
 ```
-user runs:  /spec  →  /plan  →  /build  →  /test  →  /review  →  /ship
+user runs:  /to-spec  →  /to-tickets  →  /implement with tests  →  code-review  →  launch review
 ```
 
 **Use when:** the workflow has dependencies (each step needs the previous step's output) and human judgment between steps adds value.
@@ -262,7 +262,7 @@ Always cleanup through the lead, not a teammate (per the docs: teammates lack fu
 
 ### Cost expectation
 
-Three Sonnet teammates running for ~10–15 minutes of investigation costs noticeably more than the same three personas spawned as subagents by `/ship`. The justification is *quality of conclusion* — for production debugging where the wrong fix is expensive, the extra tokens are a bargain. For a routine PR review, stick with `/ship`.
+Three Sonnet teammates running for ~10–15 minutes of investigation costs noticeably more than the same three personas spawned as subagents by `/ship`. The justification is *quality of conclusion* — for production debugging where the wrong fix is expensive, the extra tokens are a bargain. For a routine PR review, use Matt’s `code-review`.
 
 ### Anti-pattern in this scenario
 
@@ -270,7 +270,7 @@ Do **not** rebuild this as a `/debug` slash command that fans out subagents. Sub
 
 ### When *not* to use Agent Teams
 
-- Production-bound verdict on a known diff → use `/ship` (subagents).
+- Production-bound verdict on a known diff → use `/ship` in Claude Code or OpenCode, or invoke `shipping-and-launch` in Codex.
 - One specialist perspective on one artifact → direct persona invocation.
 - Sequential lifecycle (spec → plan → build) → user-driven slash commands (Pattern 4).
 - Read-heavy research with a small digest → built-in `Explore` subagent.
@@ -292,7 +292,7 @@ A persona whose job is to decide which other persona to call.
 **Why it fails:**
 - Pure routing layer with no domain value
 - Adds two paraphrasing hops → information loss + roughly 2× token cost
-- The user already knew they wanted a review; they could have called `/review` directly
+- The user already knew they wanted a review and could have invoked `code-review` directly
 - Replicates the work that slash commands and intent mapping in `AGENTS.md` already do
 
 **What to do instead:** add or refine slash commands. Document intent → command mapping in `AGENTS.md`.
@@ -315,7 +315,7 @@ A `code-reviewer` that internally invokes `security-auditor` when it sees auth c
 
 ### C. Sequential orchestrator that paraphrases
 
-An agent that calls `/spec`, then `/plan`, then `/build`, etc. on the user's behalf.
+An agent that calls `/to-spec`, `/to-tickets` and `/implement` in sequence on the user's behalf.
 
 **Why it fails:**
 - Loses the human checkpoints that catch wrong-direction work
