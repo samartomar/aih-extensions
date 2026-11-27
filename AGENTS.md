@@ -1,39 +1,10 @@
 # aih-extensions
 
-An add-on to Matt Pocock's skills (`mattpocock/skills`, installed from his GitHub repo and never vendored here), installed for Claude Code, Codex, Cursor, Kimi Code and opencode.
+**Hard rule for maintainer sessions.** In the maintainer workspace, this checkout sits under the workspace root. Start every maintainer session at that root and target this repository from there; never start one in this repository or in a worktree of it. Create no worktree by default. When the workspace's rules call for one, create it under the workspace root and keep the session at that root; never create one elsewhere.
 
-## Engineering workflow
+The workspace owns the engineering workflow, issue routing, triage, delivery coordination and navigation-helper setup; this repository's own documents own its checks and release requirements. This file holds only this repository's own rules; outside contributors without the workspace follow the public documentation and these rules.
 
-Use Matt Pocock's engineering skills for planning, implementation, debugging, and
-review. Use /ask-matt for that flow and /ask-sam for the complementary Extensions
-layer. Commit locally when authorized, then run Matt's /code-review against a fixed
-base and the originating requirements before merge; that skill reads committed
-changes. /ship handles launch readiness. Preserve the project gates below.
-
-For maintainer assignments, keep the coordinating session in its supplied
-workspace and target this Git root explicitly for commands and edits. Load these
-product rules from that session. Public contributors can use this repository
-independently; private startup routing stays outside public files.
-
-Public work uses fully qualified samartomar/aih-extensions#<number> references and explicit
---repo samartomar/aih-extensions on gh issue commands. Keep public text public-safe; never copy
-private plans or private links into this repository. Category and semver labels do
-not imply triage readiness. Inspect live labels before proposing new mappings.
-
-Accepted bugs/enhancements, including internally discovered work, use an owning
-Extensions issue before implementation; reuse an existing report for the same
-outcome. At pickup identify that issue, the actual source/worktree and plugin
-release scope. Link PRs and actual plugin/version evidence on the issue. Extensions
-has its own lifecycle; other product releases are not automatically prerequisites.
-Keep confidential reports in the verified private route.
-
-Before closeout verify the issue reflects merged versus available behavior. When
-release is required by acceptance, retain it as pending until verified; otherwise
-name the remaining release owner and follow-up. Public records stand alone. Any
-private maintainer instructions travel through an explicit private handoff.
-
-Local work does not authorize pushes, tracker writes, PRs, merges, signing, or
-publication. Carry any explicit authorization through its agreed scope.
+An add-on to Matt Pocock's skills (`mattpocock/skills`, installed from his GitHub repo and never vendored here), installed for Claude Code, Codex, Cursor, Kimi Code and opencode. Extensions has its own lifecycle; other product releases are not automatically prerequisites.
 
 ## Project constraints
 
@@ -47,12 +18,3 @@ publication. Carry any explicit authorization through its agreed scope.
 - Machine setup and cleanup go through `scripts/setup.mjs` (`npm run setup | status | teardown | clean`, each a dry run without `--yes`). Two routes, never side by side: direct (default, every detected tool, tracked in `~/.aih-extensions/manifest.json`) and `--marketplace` (Claude Code only). Uninstall must keep removing both, including hand-installed marketplace copies. Anything new this repo creates on a machine (a folder, a config entry, a temp dir prefix) must be removed by `uninstall --all` or `clean`; add it there in the same change. Temp prefixes start with `aihx-`: the AI Harness project owns `aih-*` in the temp folder.
 - `.github/workflows/upstream.yml` runs `scripts/check-upstream.mjs --apply` every 3 days and opens an issue for the owner; it never merges. Keep each pin written once as `sha: '<40 hex>'` in `upstream.config.mjs` and once as `"sha": "<40 hex>"` in `source-declarations/v1.json`, since `scripts/move-pins.mjs` moves both by exact text.
 - Release: bump `version` in `.claude-plugin/plugin.json`, `.claude-plugin/marketplace.json` and `package.json` together.
-
-## Workflow references
-
-Use the managed Matt Pocock skills and Extensions within this repository's rules.
-Keep upstream skills in their managed installation, unchanged by repository cleanup.
-
-- [Issue routing](docs/agents/issue-tracker.md): owning delivery issue and intake.
-- [Triage](docs/agents/triage-labels.md): existing label roles and mappings.
-- [Domain documentation](docs/agents/domain.md): vocabulary and decision homes.
