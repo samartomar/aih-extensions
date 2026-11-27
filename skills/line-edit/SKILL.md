@@ -6,9 +6,9 @@ disable-model-invocation: true
 
 Line-edit the document the user names. A **line edit** changes how a document reads and never what it says. It is done when every sentence is **load-bearing**: remove it and the reader loses a fact, an instruction or a reason they need.
 
-If an agent reads the document (a skill, `AGENTS.md`, `CLAUDE.md`, a prompt, a document one of them points to), also call the Skill tool with "writing-for-agents". Its no-op test is what load-bearing means for that reader. Whatever it would prune or move goes in the report as a proposal: this skill changes only sentences, links and Markdown.
+If the document instructs an agent (a skill, `AGENTS.md`, `CLAUDE.md`, a prompt), also call the Skill tool with "writing-for-agents". Its no-op test is what load-bearing means for that reader. Whatever it would prune or move goes in the report as a proposal: this skill changes only sentences, links and Markdown.
 
-A style rule the repository documents outranks the reference below.
+A style rule in the repository's `AGENTS.md`, `CLAUDE.md` or `CONTRIBUTING.md` outranks the reference below.
 
 ## Steps
 
@@ -16,12 +16,12 @@ A style rule the repository documents outranks the reference below.
 2. **Take the inventory.** Before the first edit, write out a numbered list of everything the document carries: each fact, instruction, condition, exception, qualifier, number, name and link target. Done when every sentence, list item and table cell maps to an inventory line or is marked as carrying nothing.
 3. **Cut** each sentence that carries nothing, and each that restates another without adding to it: an announcement of what follows, a summary of what came before, a point made twice.
 4. **Rewrite** what survives, one section at a time, until it meets every rule below. Edit prose only. Code, commands, quotations, identifiers and frontmatter stay byte for byte; a code block may gain the indentation its list item needs. A line you do not reword keeps its own list marker, emphasis marker and wrapping.
-5. **Verify.** Done when:
+5. **Verify** the edit, not the document's claims. Done when:
    - [ ] each inventory number points at the sentence in the result that states it;
    - [ ] each sentence in the result points back at an inventory number, or is listed as an addition;
-   - [ ] every link resolves: its file exists and its anchor matches a heading;
-   - [ ] no link anywhere in the repository points at a heading you renamed or removed;
-   - [ ] the repository's Markdown or link checker passes, where it has one.
+   - [ ] every link into the repository resolves: its file exists and its anchor matches a heading (a link to the web stays unchecked);
+   - [ ] for each heading you renamed or removed, a search of the repository finds no link to its old anchor;
+   - [ ] the Markdown or link check in the repository's `package.json` or CI passes, if it has one.
 6. **Report** the word count before and after; each sentence you cut as carrying nothing; each addition and where you read it; each link you could not resolve and each claim you doubt, both left as written; and the inventory lines this reader could lose. Those last are proposals: cutting one changes what the document says, so the user decides. The goal is every fact kept; a shorter document usually follows.
 
 ## Sentences

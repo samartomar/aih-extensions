@@ -72,3 +72,9 @@ The skill's verify step gained a second check after these runs, so they did not
 exercise the final text. One run per arm is scenario evidence, not an
 effectiveness measurement. The case has not been run with `claude plugin eval`,
 so the skill stays typed-only.
+
+The first typed run after the skill shipped, on a 3,000-word research note, was
+stopped by its user. Before the first edit the agent had searched the whole
+workspace for files pointing at the note, for a style guide and for a link
+checker. The skill now names where each lookup stops, and verifies the edit
+only: not the document's claims, and not its links to the web.
