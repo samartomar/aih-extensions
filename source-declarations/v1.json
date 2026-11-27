@@ -75,6 +75,7 @@
       "members": [
         "skills/ask-sam",
         "skills/install-commit-gate",
+        "skills/line-edit",
         "hooks",
         "scripts",
         "evals",

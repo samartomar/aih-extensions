@@ -22,6 +22,7 @@ command for the user to invoke. User-invoked skills require that explicit reques
 - **`/performance-optimization`**: measure first, fix, then set a budget. `diagnosing-bugs` locates a regression; this skill fixes and budgets it.
 - **`/api-and-interface-design`**: REST, GraphQL or RPC contracts and versioning. Module shape stays with `codebase-design`.
 - **`/documentation-and-adrs`**: README, API reference, OpenAPI, changelog and comments explaining decisions. ADRs and glossaries belong to `domain-modeling`.
+- **`/line-edit`**: a standalone pass over a finished document: every fact inventoried and kept, sentences tightened, links and Markdown checked. `/documentation-and-adrs` reviews the prose of a document while writing it; `writing-for-agents` owns what an agent-facing one holds.
 - **`/code-simplification`**: improve readability while preserving behavior; replaces built-in `simplify` in this setup.
 - **`/frontend-ui-engineering`**: production UI, accessibility, responsive layout. `prototype` answers "what should this look like?"; this skill builds the real one.
 - **`/ci-cd-and-automation`**: pipelines and quality gates.

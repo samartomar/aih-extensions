@@ -113,6 +113,8 @@ cases; several specialists were not evaluated. Promotions need fresh evidence.
 
 The specialists draw on seven checklists in [`references/`](references/) (definition of done, testing, security, performance, accessibility, observability, orchestration).
 
+One specialist is this repo's own. [`/line-edit`](skills/line-edit/SKILL.md) tightens a finished document's sentences, links and Markdown, and checks that every fact is still there. It runs only when typed.
+
 ### Safety layer (this repo)
 
 - **git-guard** checks each shell command before the agent runs it. It denies force pushes and remote deletes, `reset --hard`, `clean -f`, forced branch moves and deletes, `checkout`/`switch`/`restore` that discard work, `stash clear`, `commit --no-verify` and `-c core.hooksPath=…`, and asks before a push to `main`, `master` or the remote's default branch (as GitHub reports it), or when it can't tell which branch a push updates. Pushes to other branches go through. It is a guardrail against common agent mistakes, not a sandbox: see [Limits](#limits).
