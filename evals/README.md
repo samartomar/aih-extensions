@@ -47,3 +47,25 @@ Claude Code 2.1.296 model startup returned revoked OAuth / HTTP 401, so fresh
 Claude advisory context/eval measurements were unavailable and were not run.
 The historical context snapshot above remains historical; no new effectiveness,
 context-cost or auto-invocation-promotion claim is made.
+
+## line-edit (2026-11-27)
+
+Two informal with-and-without trials, run headless with Claude Code 2.1.330 and
+Claude Opus 5.5 at medium effort, one run per arm, outside `claude plugin eval`.
+The with arm read a draft of the skill as a file. The plain arm was told to make
+the writing clear, crisp and precise, with no wasted words, and to lose no
+information.
+
+| Document | Arm | Words after | Facts kept | Planted defects fixed | Content decisions |
+|---|---|---|---|---|---|
+| The [`line-edit`](line-edit/prompt.md) case: 338 words, 14 facts, 8 planted defects | with | 167 | 14 of 14 | 8 of 8 | one, reported: it reworded a claim it doubted. It wrote out a 20-line inventory, kept the link that does not resolve and reported it |
+| | plain | 159 | 14 of 14 | 8 of 8 | three: removed that link, moved a warning so it covers every run, added a placeholder the source lacks |
+| [`docs/maintaining.md`](../docs/maintaining.md): 1,036 words, already dense | with, earlier draft | 1,040 | not graded | none planted | none; the agent skipped the written inventory, which step 2 now requires |
+| | plain | 1,039 | not graded | none planted | none |
+
+What it supports: in this sample the skill did not make the result shorter than a
+well-worded plain instruction. It changed who decides: the with arm showed where each fact went and left the
+link and the warning to the user. It reworded one claim it doubted and said so;
+step 6 now has such a claim left as written. One run per arm is
+scenario evidence, not an effectiveness measurement. The case has not been run
+with `claude plugin eval`, so the skill stays typed-only.
