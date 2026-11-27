@@ -99,7 +99,6 @@ cases; several specialists were not evaluated. Promotions need fresh evidence.
 | [`/performance-optimization`](skills/performance-optimization/SKILL.md) | | Fix and budget a slowdown that `/diagnosing-bugs` located |
 | [`/api-and-interface-design`](skills/api-and-interface-design/SKILL.md) | | REST, GraphQL or RPC contracts and versioning |
 | [`/documentation-and-adrs`](skills/documentation-and-adrs/SKILL.md) | | README, API reference, changelog (ADRs stay with Matt's `/domain-modeling`) |
-| [`/line-edit`](skills/line-edit/SKILL.md) | | Tighter sentences, working links and Markdown that renders, with every fact kept (original to this repo) |
 | [`/code-simplification`](skills/code-simplification/SKILL.md) | | Clearer code, same behaviour (replaces Claude Code's built-in `/simplify`) |
 | [`/frontend-ui-engineering`](skills/frontend-ui-engineering/SKILL.md) | | Production UI, accessibility, responsive layout |
 | [`/ci-cd-and-automation`](skills/ci-cd-and-automation/SKILL.md) | | Pipelines and quality gates |
@@ -113,6 +112,8 @@ cases; several specialists were not evaluated. Promotions need fresh evidence.
 | [`/setup-pre-commit`](skills/setup-pre-commit/SKILL.md) | | Once per JS/TS repo: Husky, lint-staged, typecheck and tests (from Matt's misc skills) |
 
 The specialists draw on seven checklists in [`references/`](references/) (definition of done, testing, security, performance, accessibility, observability, orchestration).
+
+One specialist is this repo's own. [`/line-edit`](skills/line-edit/SKILL.md) tightens a finished document's sentences, links and Markdown, and checks that every fact is still there. It runs only when typed.
 
 ### Safety layer (this repo)
 

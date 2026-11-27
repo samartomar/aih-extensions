@@ -54,7 +54,8 @@ Two informal with-and-without trials, run headless with Claude Code 2.1.330 and
 Claude Opus 5.5 at medium effort, one run per arm, outside `claude plugin eval`.
 The with arm read a draft of the skill as a file. The plain arm was told to make
 the writing clear, crisp and precise, with no wasted words, and to lose no
-information.
+information. Facts and defects were scored with a regular-expression script and
+then read by hand, not with this case's grader.
 
 | Document | Arm | Words after | Facts kept | Planted defects fixed | Content decisions |
 |---|---|---|---|---|---|
@@ -64,8 +65,10 @@ information.
 | | plain | 1,039 | not graded | none planted | none |
 
 What it supports: in this sample the skill did not make the result shorter than a
-well-worded plain instruction. It changed who decides: the with arm showed where each fact went and left the
-link and the warning to the user. It reworded one claim it doubted and said so;
-step 6 now has such a claim left as written. One run per arm is
-scenario evidence, not an effectiveness measurement. The case has not been run
-with `claude plugin eval`, so the skill stays typed-only.
+well-worded plain instruction. In the one run on the case, the with arm showed
+where each fact went and left the link and the warning to the user. It reworded
+one claim it doubted and said so; step 6 now has such a claim left as written.
+The skill's verify step gained a second check after these runs, so they did not
+exercise the final text. One run per arm is scenario evidence, not an
+effectiveness measurement. The case has not been run with `claude plugin eval`,
+so the skill stays typed-only.
