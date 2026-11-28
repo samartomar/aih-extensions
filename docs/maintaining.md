@@ -48,7 +48,7 @@ An issue is updated, not duplicated, while upstream keeps moving. The same scrip
 Before committing, run `npm run vendor`, `npm test` and `npm run validate`:
 
 - Vendoring reproduces the generated files and `vendor.lock.json` from the pinned upstreams. Review any resulting diff; include intended generated changes in the commit. CI regenerates them and rejects a diff against the committed files.
-- Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.
+- Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, the line-edit comparison script, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.
 - Validation explicitly checks both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` with the official `claude plugin validate <manifest> --strict` command. Passing a directory selects the marketplace manifest, so it does not establish that both were checked. CI installs Claude Code 2.1.285 on its disposable runner. Validation makes no model request and requires no account credentials.
 
 For Guide changes, also run `npm run guide` and `npm run guide:check`.

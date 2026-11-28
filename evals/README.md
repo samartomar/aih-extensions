@@ -112,3 +112,7 @@ plain model makes those decisions itself and reports them. The grader checks exa
 those rules and the plain arm was not told them, so this does not show that the skill
 writes a better document, or that a plain instruction stating the same rules would do
 worse. One case, one model, five runs per arm. The skill stays typed-only.
+
+After these runs the skill's verify step gained a bundled comparison script
+(`skills/line-edit/line-check.mjs`), and its report now says to expect about the same
+length. This case has not been re-run on that text.

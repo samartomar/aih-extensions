@@ -10,19 +10,22 @@ If the document instructs an agent (a skill, `AGENTS.md`, `CLAUDE.md`, a prompt)
 
 A style rule in the repository's `AGENTS.md`, `CLAUDE.md` or `CONTRIBUTING.md` outranks the reference below.
 
+To check an edit someone else made, skip to step 5 with their before and after.
+
 ## Steps
 
 1. **Name the reader.** Write one sentence: who reads this, and what they do next. Take it from the user or the document; ask only when neither says.
-2. **Take the inventory.** Before the first edit, write out a numbered list of everything the document carries: each fact, instruction, condition, exception, qualifier, number, name and link target. Done when every sentence, list item and table cell maps to an inventory line or is marked as carrying nothing.
+2. **Take the inventory.** Before the first edit, write out a numbered list of everything the document carries: each fact, instruction, condition, exception, qualifier, number, name and link target. Done when every sentence, list item and table cell maps to an inventory line or is marked as carrying nothing. For a document so long that the list would run to hundreds of lines, skip it: step 5's check compares every sentence.
 3. **Cut** each sentence that carries nothing, and each that restates another without adding to it: an announcement of what follows, a summary of what came before, a point made twice.
 4. **Rewrite** what survives, one section at a time, until it meets every rule below. Edit prose only. Code, commands, quotations, identifiers and frontmatter stay byte for byte; a code block may gain the indentation its list item needs. A line you do not reword keeps its own list marker, emphasis marker and wrapping.
-5. **Verify** the edit, not the document's claims. Done when:
-   - [ ] each inventory number points at the sentence in the result that states it;
-   - [ ] each sentence in the result points back at an inventory number, or is listed as an addition;
-   - [ ] every link into the repository resolves: its file exists and its anchor matches a heading (a link to the web stays unchecked);
-   - [ ] for each heading you renamed or removed, a search of the repository finds no link to its old anchor;
+5. **Verify** the edit, not the document's claims. Run this skill's `line-check.mjs` with Node: `node <this skill's folder>/line-check.mjs <before> <after>`, or `--git <file>` to compare with the last commit. It pairs each sentence that is no longer present word for word with its nearest match, and lists new sentences, missing links and code, links that do not resolve, and links elsewhere in the repository to a heading you renamed or removed (a link to the web stays unchecked). Without Node, make the same comparison by hand. Done when:
+   - [ ] each sentence it lists says the same thing as its nearest match, or is in your report as a cut;
+   - [ ] each new sentence it lists is in your report as an addition;
+   - [ ] each missing link or code span it lists is in your report with its reason, and the frontmatter is unchanged;
+   - [ ] it exits 0: every link into the repository resolves, and nothing links to a heading you renamed or removed;
+   - [ ] each inventory number, where you took an inventory, points at the sentence in the result that states it;
    - [ ] the Markdown or link check in the repository's `package.json` or CI passes, if it has one.
-6. **Report** the word count before and after; each sentence you cut as carrying nothing; each addition and where you read it; each link you could not resolve and each claim you doubt, both left as written; and the inventory lines this reader could lose. Those last are proposals: cutting one changes what the document says, so the user decides. The goal is every fact kept; a shorter document usually follows.
+6. **Report** the word count before and after; each sentence you cut as carrying nothing; each addition and where you read it; each link you could not resolve and each claim you doubt, both left as written; and the inventory lines this reader could lose, each with the words it would remove. Those last are proposals: cutting one changes what the document says, so the user decides. The goal is every fact kept. Expect about the same length: the document gets shorter only when the user accepts proposals.
 
 ## Sentences
 
