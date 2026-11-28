@@ -38,6 +38,16 @@ test('direct install saves the offline guide, updates it, preserves a guard opt-
     return r.stdout;
   };
   const install = () => setup('install', '--tools', 'claude,codex,cursor,kimi,opencode', '--matt-ref', sha, '--yes');
+  // A dry run names what it would do: the guide's own folder, and only the hooks it would add.
+  const optedOut = setup('install', '--tools', 'claude,codex,cursor,kimi,opencode', '--matt-ref', sha, '--no-git-guard');
+  assert.ok(!optedOut.includes('undefined'), optedOut);
+  assert.ok(optedOut.includes(`under ${path.join(home, '.aih-extensions', 'guide')}`), optedOut);
+  assert.match(optedOut, /claude: add 2 hooks \(skill-guard, lanes-card\)/);
+  assert.match(optedOut, /codex: add 1 hook \(lanes-card\)/);
+  const guarded = setup('install', '--tools', 'claude,codex,cursor,kimi,opencode', '--matt-ref', sha);
+  assert.match(guarded, /claude: add 3 hooks \(git-guard, skill-guard, lanes-card\)/);
+  assert.match(guarded, /codex: add 2 hooks \(git-guard, lanes-card\)/);
+  assert.deepEqual(JSON.parse(fs.readFileSync(settings, 'utf8')), original, 'a dry run changes no settings');
   install();
   const manual = path.join(home, '.aih-extensions', 'guide', 'MANUAL.md');
   assert.match(fs.readFileSync(manual, 'utf8'), /Ask AIH Guide/);
