@@ -372,7 +372,7 @@ function installDirect() {
   for (const tool of [...tools, 'guide']) {
     const ops = plan.filter((c) => c.tool === tool);
     if (!ops.length) { say(`   ${tool}: nothing to copy (${tool === 'cursor' ? 'loads the Claude Code folders' : 'uses the Claude Code skills folder'})`); continue; }
-    step(`${tool}: ${ops.filter((c) => c.src).length} copies and ${ops.filter((c) => c.content).length} generated files under ${DIRS[tool]}`, () => {
+    step(`${tool}: ${ops.filter((c) => c.src).length} copies and ${ops.filter((c) => c.content).length} generated files under ${tool === 'guide' ? path.join(OWN_DIR, 'guide') : DIRS[tool]}`, () => {
       for (const c of ops) {
         fs.mkdirSync(path.dirname(c.dest), { recursive: true });
         if (c.src) fs.cpSync(c.src, c.dest, { recursive: true });
@@ -383,13 +383,18 @@ function installDirect() {
   step(`copy the hook scripts to ${HOOKS_DIR}`, () => fs.cpSync(path.join(addonDir, 'hooks'), HOOKS_DIR, { recursive: true, filter: (s) => !s.endsWith('hooks.json') }));
 
   let overrides = [];
+  // Each message names only the hooks this run adds: an opted-out git guard is not among them.
+  const selectedHooks = (tool) => hookEntries(tool, HOOKS_DIR).filter(e => gitGuard[tool] || !e.command.includes('git-guard.mjs'));
+  const hookList = (entries) => `${entries.length} hook${entries.length === 1 ? '' : 's'} (${entries.map(e => path.basename(/"([^"]+)"/.exec(e.command)?.[1] ?? e.event, '.mjs')).join(', ')})`;
   if (tools.includes('claude')) {
     overrides = addOverrides(readJson(CONFIG.claude, {}), OVERRIDES).added;
-    step(`claude: add 3 hooks (git-guard, skill-guard, lanes-card) and skillOverrides [${overrides.join(', ')}] to ${CONFIG.claude}`, () =>
-      writeJson(CONFIG.claude, addOverrides(addHooks(readJson(CONFIG.claude, {}), hookEntries('claude', HOOKS_DIR).filter(e => gitGuard.claude || !e.command.includes('git-guard.mjs'))), OVERRIDES).next));
+    const entries = selectedHooks('claude');
+    step(`claude: add ${hookList(entries)} and skillOverrides [${overrides.join(', ')}] to ${CONFIG.claude}`, () =>
+      writeJson(CONFIG.claude, addOverrides(addHooks(readJson(CONFIG.claude, {}), entries), OVERRIDES).next));
   }
   if (tools.includes('codex')) {
-    step(`codex: add selected hooks to ${CONFIG.codex}`, () => writeJson(CONFIG.codex, addHooks(readJson(CONFIG.codex, {}), hookEntries('codex', HOOKS_DIR).filter(e => gitGuard.codex || !e.command.includes('git-guard.mjs')))));
+    const entries = selectedHooks('codex');
+    step(`codex: add ${hookList(entries)} to ${CONFIG.codex}`, () => writeJson(CONFIG.codex, addHooks(readJson(CONFIG.codex, {}), entries)));
   }
   if (tools.includes('kimi') && gitGuard.kimi) {
     step(`kimi: add a [[hooks]] block (git-guard) to ${CONFIG.kimi}`, () => writeWithBackup(CONFIG.kimi, addTomlBlock(readText(CONFIG.kimi), kimiBlock(HOOKS_DIR))));
