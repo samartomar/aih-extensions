@@ -70,11 +70,45 @@ where each fact went and left the link and the warning to the user. It reworded
 one claim it doubted and said so; step 6 now has such a claim left as written.
 The skill's verify step gained a second check after these runs, so they did not
 exercise the final text. One run per arm is scenario evidence, not an
-effectiveness measurement. The case has not been run with `claude plugin eval`,
-so the skill stays typed-only.
+effectiveness measurement. The `claude plugin eval` runs below came later.
 
 The first typed run after the skill shipped, on a 3,000-word research note, was
 stopped by its user. Before the first edit the agent had searched the whole
 workspace for files pointing at the note, for a style guide and for a link
 checker. The skill now names where each lookup stops, and verifies the edit
 only: not the document's claims, and not its links to the web.
+
+### With-and-without eval (2026-11-28 UTC)
+
+Two `claude plugin eval` runs of this case: Claude Code 2.1.330,
+`--model claude-opus-5-5`, five runs per arm, the default judge, source at `f92b445`,
+$2.41 together. A score is the share of runs that passed the strict grader.
+
+| Run | First line of the prompt | With | Without | Skill loaded |
+|---|---|---|---|---|
+| 1 | "Use /line-edit for this task." | 0.2 | 0 | 1 of 5 |
+| 2 | The current first line, which names the Skill tool | 1.0 | 0 | 5 of 5 |
+
+In run 1 the model answered, in four of the five with-runs, that `/line-edit` was not
+in its list of skills, and edited by hand. A typed-only skill is not listed to the
+model, and in a headless prompt `/line-edit` is text, not a command. The case's first
+line now tells the model to load the skill with the Skill tool. The other typed-only
+cases have not been checked for the same weakness.
+
+Across both runs the skill loaded in 6 runs and not in 14. All 20 replies were read by
+hand and measured with a script:
+
+| | Skill loaded (6 runs) | Plain (14 runs) |
+|---|---|---|
+| Passed the grader | 6 | 0 |
+| Words in the edited document | 160 to 175 | 163 to 201 |
+| Kept the `#migrations` link and left it to the user | 6 | 0; all removed or replaced it |
+| Moved the migration warning ahead of the steps | 0; 5 proposed it | 12 |
+| Reworded the `--limit` claim | 0; all 6 reported it as doubtful | 11 |
+
+What it supports: on this case and model the skill does not make the result shorter.
+It keeps the document's meaning fixed and hands content decisions to the user; the
+plain model makes those decisions itself and reports them. The grader checks exactly
+those rules and the plain arm was not told them, so this does not show that the skill
+writes a better document, or that a plain instruction stating the same rules would do
+worse. One case, one model, five runs per arm. The skill stays typed-only.

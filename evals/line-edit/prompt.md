@@ -5,7 +5,7 @@ max_turns: 6
 allowed_tools: [Read, Glob, Grep, Skill]
 ---
 
-Use /line-edit for this task.
+Use /line-edit for this task: load it with the Skill tool (skill name `line-edit`) before you start. If the tool says the skill is unknown, do the line edit yourself.
 
 Line-edit this document for an on-call engineer who has to run the cache warmer by hand. It stands alone: it belongs to no repository and no other file links to it. Put the complete edited document in your reply, followed by your report; do not create or edit files.
 
