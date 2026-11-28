@@ -113,7 +113,7 @@ cases; several specialists were not evaluated. Promotions need fresh evidence.
 
 The specialists draw on seven checklists in [`references/`](references/) (definition of done, testing, security, performance, accessibility, observability, orchestration).
 
-One specialist is this repo's own. [`/line-edit`](skills/line-edit/SKILL.md) tightens a finished document's sentences, links and Markdown, and checks that every fact is still there. It runs only when typed.
+One specialist is this repo's own. [`/line-edit`](skills/line-edit/SKILL.md) tightens a finished document's sentences, links and Markdown, and checks that every fact is still there. Expect about the same length: what could be cut comes back as proposals for you to decide. Its `line-check.mjs` compares the document before and after. It runs only when typed.
 
 ### Safety layer (this repo)
 
