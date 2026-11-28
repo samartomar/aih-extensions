@@ -47,6 +47,10 @@ An issue is updated, not duplicated, while upstream keeps moving. The same scrip
 
 Before committing, run `npm run vendor`, `npm test` and `npm run validate`:
 
+- Vendoring reproduces the generated files and `vendor.lock.json` from the pinned upstreams. Review any resulting diff; include intended generated changes in the commit. CI regenerates them and rejects a diff against the committed files.
+- Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.
+- Validation explicitly checks both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` with the official `claude plugin validate <manifest> --strict` command. Passing a directory selects the marketplace manifest, so it does not establish that both were checked. CI installs Claude Code 2.1.285 on its disposable runner. Validation makes no model request and requires no account credentials.
+
 For Guide changes, also run `npm run guide` and `npm run guide:check`.
 The builder uses one authored body for the offline manual and three native
 entries. `guide:check` rejects stale output and identity; the installer verifies
@@ -62,10 +66,6 @@ points at the source commit without a self-referencing commit cycle. Dirty
 outputs are labeled uncommitted and must be regenerated before release.
 Exact hashes establish content identity, not publisher authentication. Record
 native procedures and their limits in [Guide evidence](guide-evidence.md).
-
-- Vendoring reproduces the generated files and `vendor.lock.json` from the pinned upstreams. Review any resulting diff; include intended generated changes in the commit. CI regenerates them and rejects a diff against the committed files.
-- Tests verify git-guard inputs (shell parsing, each tool's input shape, default-branch checks, and temporary approvals matched against actual push destinations), commit-gate behavior in real Git repositories, installer placement/config helpers, and measurement failure handling. Add focused cases for changed behavior.
-- Validation explicitly checks both `.claude-plugin/plugin.json` and `.claude-plugin/marketplace.json` with the official `claude plugin validate <manifest> --strict` command. Passing a directory selects the marketplace manifest, so it does not establish that both were checked. CI installs Claude Code 2.1.285 on its disposable runner. Validation makes no model request and requires no account credentials.
 
 The required CI checks run on Windows and Linux. After changing an adapter or a tool's paths, also install and run that tool once in a throwaway repo, as described in [tools.md](tools.md#verified-live). Unit checks of its protocol do not establish the tool's live behavior.
 
